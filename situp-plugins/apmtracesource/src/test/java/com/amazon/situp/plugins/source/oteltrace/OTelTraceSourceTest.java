@@ -78,7 +78,7 @@ public class OTelTraceSourceTest {
         addOneRequest();
         final AggregatedHttpResponse res2 = WebClient.of().execute(RequestHeaders.builder()
                         .scheme(SessionProtocol.HTTP)
-                        .authority("0.0.0.0:21890")
+                        .authority("127.0.0.1:21890")
                         .method(HttpMethod.POST)
                         .path("/opentelemetry.proto.collector.trace.v1.TraceService/Export")
                         .contentType(MediaType.JSON_UTF_8)
@@ -92,7 +92,7 @@ public class OTelTraceSourceTest {
         addOneRequest();
         final AggregatedHttpResponse res2 = WebClient.of().execute(RequestHeaders.builder()
                         .scheme(SessionProtocol.HTTP)
-                        .authority("0.0.0.0:21890")
+                        .authority("127.0.0.1:21890")
                         .method(HttpMethod.POST)
                         .path("/opentelemetry.proto.collector.trace.v1.TraceService/Export")
                         .contentType(MediaType.PROTOBUF)
