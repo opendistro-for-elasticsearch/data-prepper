@@ -1,6 +1,5 @@
 plugins {
     id 'jacoco'
-    id 'com.bmuschko.docker-remote-api' version '6.6.1'
 }
 
 sourceSets {
@@ -10,8 +9,6 @@ sourceSets {
         }
     }
 }
-
-apply from: "integrationTest.gradle"
 
 dependencies {
     compile project(':situp-api')
