@@ -1,0 +1,4 @@
+FROM adoptopenjdk/openjdk14:jre-14.0.1_7-alpine
+EXPOSE 21890
+WORKDIR /
+ENTRYPOINT ["java","-jar","/app/situp.jar","/app/transformation-instance.yml"]

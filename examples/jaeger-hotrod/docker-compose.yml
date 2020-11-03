@@ -4,7 +4,7 @@ services:
     container_name: situp
     build:
       context: ../..
-      dockerfile: examples/Dockerfile
+      dockerfile: examples/situp/DOCKERFILE
     working_dir: /app
     command: sh situp-wait-for-odfe-and-start.sh
     volumes:
@@ -13,6 +13,7 @@ services:
       - ../demo/root-ca.pem:/app/root-ca.pem
       - ../demo/demo-situp.crt:/app/demo-situp.crt
       - ../demo/demo-situp.key:/app/demo-situp.key
+      - ../situp/situp-core-0.1-beta.jar:/app/situp.jar
     ports:
       - "21890:21890"
     networks:
