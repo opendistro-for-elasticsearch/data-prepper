@@ -16,4 +16,5 @@ include 'research'
 include 'research:zipkin-elastic-to-otel'
 include 'situp-benchmarks:lmdb-benchmarks'
 include 'situp-benchmarks:service-map-stateful-benchmarks'
+include 'data-generator'
 
