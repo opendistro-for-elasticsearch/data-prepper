@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+    id 'jacoco'
+}
+
+dependencies {
+    implementation "io.opentelemetry:opentelemetry-proto:${versionMap.opentelemetry_proto}"
+    implementation 'com.google.protobuf:protobuf-java-util:3.13.0'
+    implementation "com.linecorp.armeria:armeria:1.0.0"
+    implementation "com.linecorp.armeria:armeria-grpc:1.0.0"
+}
+
+jar {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'Main-Class': 'com.amazon.situp.data.generator.OtelDataToTraceSource')
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+}
