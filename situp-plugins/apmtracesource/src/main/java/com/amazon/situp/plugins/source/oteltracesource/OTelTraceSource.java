@@ -9,6 +9,7 @@ import com.amazon.situp.model.source.Source;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.grpc.GrpcService;
+import io.grpc.protobuf.services.ProtoReflectionService;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,7 @@ public class OTelTraceSource implements Source<Record<ExportTraceServiceRequest>
                     GrpcService
                             .builder()
                             .addService(new OTelTraceGrpcService(oTelTraceSourceConfig.getRequestTimeoutInMillis(), buffer))
-                            .enableUnframedRequests(true) // This will enable non-Grpc requests
+                            .addService(ProtoReflectionService.newInstance())
                             .useClientTimeoutHeader(false)
                             .build());
             sb.requestTimeoutMillis(oTelTraceSourceConfig.getRequestTimeoutInMillis());
