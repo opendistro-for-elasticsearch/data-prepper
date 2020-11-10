@@ -36,6 +36,7 @@ public class OTelTraceSource implements Source<Record<ExportTraceServiceRequest>
                             .builder()
                             .addService(new OTelTraceGrpcService(oTelTraceSourceConfig.getRequestTimeoutInMillis(), buffer))
                             .addService(ProtoReflectionService.newInstance())
+                            .enableUnframedRequests(true)
                             .useClientTimeoutHeader(false)
                             .build());
             sb.requestTimeoutMillis(oTelTraceSourceConfig.getRequestTimeoutInMillis());
