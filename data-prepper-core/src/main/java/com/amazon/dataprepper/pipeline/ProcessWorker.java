@@ -40,9 +40,11 @@ public class ProcessWorker implements Runnable {
             do {
                 Collection records = readBuffer.read(pipeline.getReadBatchTimeoutInMillis());
                 //TODO Hacky way to avoid logging continuously - Will be removed as part of metrics implementation
-                if (records.isEmpty() && !isEmptyRecordsLogged) {
-                    LOG.info(" {} Worker: No records received from buffer", pipeline.getName());
-                    isEmptyRecordsLogged = true;
+                if (records.isEmpty()) {
+                    if(!isEmptyRecordsLogged) {
+                        LOG.info(" {} Worker: No records received from buffer", pipeline.getName());
+                        isEmptyRecordsLogged = true;
+                    }
                 } else {
                     LOG.info(" {} Worker: Processing {} records from buffer", pipeline.getName(), records.size());
                 }
