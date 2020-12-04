@@ -5,6 +5,7 @@ import org.junit.Test;
 
 import java.util.Map;
 
+import static com.amazon.dataprepper.TestDataProvider.CONNECTED_PIPELINE_ROOT_SOURCE_INCORRECT;
 import static com.amazon.dataprepper.TestDataProvider.CYCLE_MULTIPLE_PIPELINE_CONFIG_FILE;
 import static com.amazon.dataprepper.TestDataProvider.INCORRECT_SOURCE_MULTIPLE_PIPELINE_CONFIG_FILE;
 import static com.amazon.dataprepper.TestDataProvider.MISSING_NAME_MULTIPLE_PIPELINE_CONFIG_FILE;
@@ -26,6 +27,13 @@ public class PipelineParserTests {
         final PipelineParser pipelineParser = new PipelineParser(VALID_MULTIPLE_PIPELINE_CONFIG_FILE);
         final Map<String, Pipeline> actualPipelineMap = pipelineParser.parseConfiguration();
         assertThat(actualPipelineMap.keySet(), is(VALID_MULTIPLE_PIPELINE_NAMES));
+    }
+
+    @Test
+    public void testConnectedPipelineCreationWhenRootPipelineFails(){
+        final PipelineParser pipelineParser = new PipelineParser(CONNECTED_PIPELINE_ROOT_SOURCE_INCORRECT);
+        final Map<String, Pipeline> connectedPipelines = pipelineParser.parseConfiguration();
+        assertThat(connectedPipelines.size(), is(equalTo(0)));
     }
 
     @Test
