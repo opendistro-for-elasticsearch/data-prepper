@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -98,7 +99,9 @@ public class PipelineParser {
             pipelineMap.put(pipelineName, pipeline);
         } catch (Exception ex) {
             //If pipeline construction errors out, we will skip that pipeline and proceed
-            LOG.error("Construction of pipeline components failed, skipping building of pipeline [{}]", pipelineName, ex);
+            LOG.error("Construction of pipeline components failed, skipping building of pipeline [{}] and its connected " +
+                    "pipelines", pipelineName, ex);
+            processRemoveIfRequired(pipelineName, pipelineConfigurationMap, pipelineMap);
         }
 
     }
@@ -152,5 +155,40 @@ public class PipelineParser {
             return Optional.of((String) pluginSetting.getAttributeFromSettings(ATTRIBUTE_NAME));
         }
         return Optional.empty();
+    }
+
+    /**
+     * This removes all built connected pipelines of given pipeline from pipelineMap.
+     * TODO Update this to be more elegant and trigger destroy of plugins
+     */
+    private void removeConnectedPipelines(
+            final String failedPipeline,
+            final Map<String, PipelineConfiguration> pipelineConfigurationMap,
+            final Map<String, Pipeline> pipelineMap) {
+        final PipelineConfiguration failedPipelineConfiguration = pipelineConfigurationMap.remove(failedPipeline);
+
+        //remove source connected pipelines
+        final Optional<String> sourcePipelineOptional = getPipelineNameIfPipelineType(
+                failedPipelineConfiguration.getSourcePluginSetting());
+        sourcePipelineOptional.ifPresent(sourcePipeline -> processRemoveIfRequired(
+                sourcePipeline, pipelineConfigurationMap, pipelineMap));
+
+        //remove sink connected pipelines
+        final List<PluginSetting> sinkPluginSettings = failedPipelineConfiguration.getSinkPluginSettings();
+        sinkPluginSettings.forEach(sinkPluginSetting -> {
+            getPipelineNameIfPipelineType(sinkPluginSetting).ifPresent(sinkPipeline -> processRemoveIfRequired(
+                    sinkPipeline, pipelineConfigurationMap, pipelineMap));
+        });
+    }
+
+    private void processRemoveIfRequired(
+            final String pipelineName,
+            final Map<String, PipelineConfiguration> pipelineConfigurationMap,
+            final Map<String, Pipeline> pipelineMap) {
+        if (pipelineConfigurationMap.containsKey(pipelineName)) {
+            pipelineMap.remove(pipelineName);
+            sourceConnectorMap.remove(pipelineName);
+            removeConnectedPipelines(pipelineName, pipelineConfigurationMap, pipelineMap);
+        }
     }
 }
