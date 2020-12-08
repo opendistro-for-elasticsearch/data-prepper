@@ -1,5 +1,29 @@
 version: "3.7"
+networks:
+  my_network:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.10.0.0/16
+         gateway: 10.10.0.1
+
 services:
+  dnsmasq:
+    restart: always
+    build:
+      context: ../dns
+      dockerfile: Dockerfile
+    volumes:
+      - ../dns/dnsmasq.conf:/etc/dnsmasq.conf
+      - ../dns/hosts.prepper:/etc/hosts.prepper
+    ports:
+      - "5300:53/udp"
+    cap_add:
+      - NET_ADMIN
+    networks:
+      my_network:
+        ipv4_address: 10.10.1.1
+
   data-prepper:
     restart: unless-stopped
     container_name: data-prepper
@@ -15,9 +39,11 @@ services:
     ports:
       - "21890:21890"
     networks:
-      - my_network
+      my_network:
+        ipv4_address: 10.10.2.1
     depends_on:
       - opendistro-for-elasticsearch
+
   opendistro-for-elasticsearch:
     container_name: node-0.example.com
     image: 'amazon/opendistro-for-elasticsearch:1.10.1'
@@ -28,6 +54,7 @@ services:
       - discovery.type=single-node
     networks:
       - my_network
+
   kibana:
     build:
       context: ../..
@@ -42,12 +69,14 @@ services:
       ELASTICSEARCH_HOSTS: https://node-0.example.com:9200
     networks:
       - my_network
+
   otel-collector:
     restart: unless-stopped
+    dns: 10.10.1.1
     image: otel/opentelemetry-collector:0.14.0
     command: ["--config=/etc/otel-collector-config.yml"]
     volumes:
-      - ./opentelemetry-collector/otel-collector-config.yml:/etc/otel-collector-config.yml
+      - ./opentelemetry-collector/otel-collector-dns-config.yml:/etc/otel-collector-config.yml
       - ../demo/demo-data-prepper.crt:/etc/demo-data-prepper.crt
     ports:
       - "55680:55680"
@@ -55,6 +84,7 @@ services:
       - data-prepper
     networks:
       - my_network
+
   mysql:
     restart: unless-stopped
     image: mysql:latest
@@ -64,6 +94,7 @@ services:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
     networks:
       - my_network
+
   sample-app:
     restart: unless-stopped
     build:
@@ -91,5 +122,3 @@ services:
       - mysql
     networks:
       - my_network
-networks:
-  my_network:
