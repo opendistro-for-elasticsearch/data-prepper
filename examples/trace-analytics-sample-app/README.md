@@ -64,6 +64,8 @@ Correspondingly, on the server side, the API calls are as follows
 
 Each API call in the chains above calls `/logs (analytics-service:8087)` in the analytics service.
 
+Trace data is sent to the OpenTelemetry Collector which then exports traces to an instance of Data Prepper. This sample app contains a lightweight DNS server to handle custom hostname resolution, enabling multiple Prepper instances to be found under the same hostname. Any hostnames not resolvable by the DNS server are forwarded to Docker's embedded DNS at 127.0.0.11.
+
 ## Run
 
 To run this application together with client:
