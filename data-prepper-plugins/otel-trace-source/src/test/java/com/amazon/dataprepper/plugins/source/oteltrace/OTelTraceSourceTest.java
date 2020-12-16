@@ -6,11 +6,19 @@ import com.amazon.dataprepper.plugins.buffer.BlockingBuffer;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import com.linecorp.armeria.client.Clients;
+import com.linecorp.armeria.client.ResponseTimeoutException;
+import com.linecorp.armeria.client.UnprocessedRequestException;
 import com.linecorp.armeria.client.WebClient;
+import com.linecorp.armeria.client.retry.Backoff;
+import com.linecorp.armeria.client.retry.RetryRule;
+import com.linecorp.armeria.client.retry.RetryRuleWithContent;
+import com.linecorp.armeria.client.retry.RetryingClient;
+import com.linecorp.armeria.client.retry.RetryingRpcClient;
 import com.linecorp.armeria.common.HttpData;
 import com.linecorp.armeria.common.HttpMethod;
 import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.common.RequestHeaders;
+import com.linecorp.armeria.common.RpcResponse;
 import com.linecorp.armeria.common.SessionProtocol;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc;
@@ -58,7 +66,13 @@ public class OTelTraceSourceTest {
         integerHashMap.put("request_timeout", 1);
         SOURCE = new OTelTraceSource(new PluginSetting("otel_trace_source", integerHashMap));
         SOURCE.start(BUFFER);
-        CLIENT = Clients.newClient(getUri(), TraceServiceGrpc.TraceServiceBlockingStub.class);
+        final RetryRuleWithContent<RpcResponse> retryRuleWithContent = RetryRuleWithContent
+                .<RpcResponse>builder()
+                .onUnprocessed()
+                .onException()
+                .thenBackoff();
+        CLIENT = Clients.builder(getUri()).rpcDecorator(RetryingRpcClient.newDecorator(retryRuleWithContent))
+                .build(TraceServiceGrpc.TraceServiceBlockingStub.class);
     }
 
     @AfterEach
