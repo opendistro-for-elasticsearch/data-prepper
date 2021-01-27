@@ -6,7 +6,6 @@ import com.amazon.dataprepper.model.buffer.AbstractBuffer;
 import com.amazon.dataprepper.model.buffer.Buffer;
 import com.amazon.dataprepper.model.configuration.PluginSetting;
 import com.amazon.dataprepper.model.record.Record;
-import com.amazon.dataprepper.model.CheckpointState;
 import com.google.common.base.Stopwatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +20,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -47,6 +47,7 @@ public class BlockingBuffer<T extends Record<?>> extends AbstractBuffer<T> {
     private final String pipelineName;
 
     private final Semaphore capacitySemaphore;
+    private final AtomicInteger numRecordsToBeChecked = new AtomicInteger();
 
     /**
      * Creates a BlockingBuffer with the given (fixed) capacity.
@@ -112,12 +113,17 @@ public class BlockingBuffer<T extends Record<?>> extends AbstractBuffer<T> {
         final Stopwatch stopwatch = Stopwatch.createStarted();
         try {
             while (stopwatch.elapsed(TimeUnit.MILLISECONDS) < timeoutInMillis && records.size() < batchSize) {
-                final T record = blockingQueue.poll(timeoutInMillis, TimeUnit.MILLISECONDS);
-                if (record != null) { //record can be null, avoiding adding nulls
-                    records.add(record);
-                }
-                if (records.size() < batchSize) {
-                    blockingQueue.drainTo(records, batchSize - records.size());
+                synchronized (this) {
+                    final T record = blockingQueue.poll(timeoutInMillis, TimeUnit.MILLISECONDS);
+                    if (record != null) { //record can be null, avoiding adding nulls
+                        records.add(record);
+                    }
+                    numRecordsToBeChecked.incrementAndGet();
+                    if (records.size() < batchSize) {
+                        final int maxRemaining = batchSize - records.size();
+                        blockingQueue.drainTo(records, maxRemaining);
+                        numRecordsToBeChecked.addAndGet(maxRemaining);
+                    }
                 }
             }
         } catch (InterruptedException ex) {
@@ -140,8 +146,8 @@ public class BlockingBuffer<T extends Record<?>> extends AbstractBuffer<T> {
     }
 
     @Override
-    public void checkpoint(final CheckpointState checkpointState) {
-        final int numCheckedRecords = checkpointState.getNumCheckedRecords();
+    public void checkpoint() {
+        final int numCheckedRecords = numRecordsToBeChecked.getAndSet(0);
         capacitySemaphore.release(numCheckedRecords);
     }
 }

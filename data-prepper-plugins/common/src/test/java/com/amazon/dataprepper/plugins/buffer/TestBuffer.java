@@ -48,7 +48,7 @@ public class TestBuffer implements Buffer<Record<String>> {
     }
 
     @Override
-    public void checkpoint(final CheckpointState checkpointState) {
+    public void checkpoint() {
 
     }
 

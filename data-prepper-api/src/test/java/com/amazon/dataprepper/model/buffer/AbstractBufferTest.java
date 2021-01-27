@@ -124,7 +124,7 @@ public class AbstractBufferTest {
         }
 
         @Override
-        public void checkpoint(final CheckpointState checkpointState) {
+        public void checkpoint() {
 
         }
     }

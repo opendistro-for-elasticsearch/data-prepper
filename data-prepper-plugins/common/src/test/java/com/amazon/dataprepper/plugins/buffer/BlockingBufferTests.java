@@ -2,7 +2,6 @@ package com.amazon.dataprepper.plugins.buffer;
 
 import com.amazon.dataprepper.model.configuration.PluginSetting;
 import com.amazon.dataprepper.model.record.Record;
-import com.amazon.dataprepper.model.CheckpointState;
 import org.junit.Test;
 
 import java.util.Collection;
@@ -96,7 +95,7 @@ public class BlockingBufferTests {
 
         // When
         final Collection<Record<String>> exportedRecords = blockingBuffer.read(TEST_BATCH_READ_TIMEOUT);
-        blockingBuffer.checkpoint(new CheckpointState(exportedRecords.size()));
+        blockingBuffer.checkpoint();
 
         // Then
         blockingBuffer.write(new Record<>("TIMEOUT"), TEST_WRITE_TIMEOUT);

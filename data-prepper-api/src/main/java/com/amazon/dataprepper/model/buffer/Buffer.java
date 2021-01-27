@@ -29,9 +29,7 @@ public interface Buffer<T extends Record<?>> {
     Collection<T> read(int timeoutInMillis);
 
     /**
-     * Check summary of records processed by data-prepper downstreams(preppers, sinks, pipelines).
-     *
-     * @param checkpointState the summary object of checkpoint variables
+     * Checkpoint records read from the buffer.
      */
-    void checkpoint(CheckpointState checkpointState);
+    void checkpoint();
 }
