@@ -6,7 +6,6 @@ import com.amazon.dataprepper.model.record.Record;
 import com.amazon.dataprepper.model.sink.Sink;
 import com.amazon.dataprepper.pipeline.common.FutureHelper;
 import com.amazon.dataprepper.pipeline.common.FutureHelperResult;
-import com.amazon.dataprepper.model.CheckpointState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

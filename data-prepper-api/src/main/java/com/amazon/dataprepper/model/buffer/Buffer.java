@@ -1,7 +1,6 @@
 package com.amazon.dataprepper.model.buffer;
 
 import com.amazon.dataprepper.model.record.Record;
-import com.amazon.dataprepper.model.CheckpointState;
 
 import java.util.Collection;
 import java.util.concurrent.TimeoutException;
