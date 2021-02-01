@@ -36,6 +36,8 @@ import static java.lang.String.format;
  */
 @DataPrepperPlugin(name = "bounded_blocking", type = PluginType.BUFFER)
 public class BlockingBuffer<T extends Record<?>> extends AbstractBuffer<T> {
+    public static final String BLOCKING_QUEUE_SIZE = "blockingQueueSize";
+
     private static final Logger LOG = LoggerFactory.getLogger(BlockingBuffer.class);
     private static final int DEFAULT_BUFFER_CAPACITY = 512;
     private static final int DEFAULT_BATCH_SIZE = 8;
@@ -57,11 +59,13 @@ public class BlockingBuffer<T extends Record<?>> extends AbstractBuffer<T> {
      * @param pipelineName   the name of the associated Pipeline
      */
     public BlockingBuffer(final int bufferCapacity, final int batchSize, final String pipelineName) {
-        super("BlockingBuffer", pipelineName);
+        super(PLUGIN_NAME, pipelineName);
         this.batchSize = batchSize;
         this.blockingQueue = new LinkedBlockingQueue<>(bufferCapacity);
         this.capacitySemaphore = new Semaphore(bufferCapacity);
         this.pipelineName = pipelineName;
+
+        pluginMetrics.gauge(BLOCKING_QUEUE_SIZE, blockingQueue, BlockingQueue::size);
     }
 
     /**

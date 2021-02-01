@@ -1,13 +1,18 @@
 package com.amazon.dataprepper.plugins.buffer;
 
+import com.amazon.dataprepper.metrics.MetricNames;
+import com.amazon.dataprepper.metrics.MetricsTestUtil;
 import com.amazon.dataprepper.model.configuration.PluginSetting;
 import com.amazon.dataprepper.model.record.Record;
 import com.amazon.dataprepper.model.CheckpointState;
+import io.micrometer.core.instrument.Measurement;
 import org.junit.Test;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -142,6 +147,30 @@ public class BlockingBufferTests {
             assertThat(record.getData(), equalTo("TEST" + i));
             i++;
         }
+    }
+
+    @Test
+    public void testBlockingQueueSizeMetric() throws TimeoutException {
+        // Given
+        MetricsTestUtil.initMetrics();
+        final BlockingBuffer<Record<String>> blockingBuffer = new BlockingBuffer<>(1, TEST_BATCH_SIZE,
+                TEST_PIPELINE_NAME);
+        // When
+        blockingBuffer.write(new Record<>("FILL_THE_BUFFER"), TEST_WRITE_TIMEOUT);
+
+        // Then
+        final List<Measurement> blockingQueueSizeMeasurements = MetricsTestUtil.getMeasurementList(
+                new StringJoiner(MetricNames.DELIMITER).add(TEST_PIPELINE_NAME).add("bounded_blocking")
+                        .add(BlockingBuffer.BLOCKING_QUEUE_SIZE).toString());
+        assertEquals(1, blockingQueueSizeMeasurements.size());
+        final Measurement blockingQueueSizeMeasurement = blockingQueueSizeMeasurements.get(0);
+        assertEquals(1.0, blockingQueueSizeMeasurement.getValue(), 0);
+
+        // When
+        blockingBuffer.read(TEST_BATCH_READ_TIMEOUT);
+
+        // Then
+        assertEquals(0.0, blockingQueueSizeMeasurement.getValue(), 0);
     }
 
     private PluginSetting completePluginSettingForBlockingBuffer() {
