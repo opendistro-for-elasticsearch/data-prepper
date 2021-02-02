@@ -160,7 +160,7 @@ public class BlockingBufferTests {
 
         // Then
         final List<Measurement> blockingQueueSizeMeasurements = MetricsTestUtil.getMeasurementList(
-                new StringJoiner(MetricNames.DELIMITER).add(TEST_PIPELINE_NAME).add("bounded_blocking")
+                new StringJoiner(MetricNames.DELIMITER).add(TEST_PIPELINE_NAME).add("BlockingBuffer")
                         .add(BlockingBuffer.BLOCKING_QUEUE_SIZE).toString());
         assertEquals(1, blockingQueueSizeMeasurements.size());
         final Measurement blockingQueueSizeMeasurement = blockingQueueSizeMeasurements.get(0);

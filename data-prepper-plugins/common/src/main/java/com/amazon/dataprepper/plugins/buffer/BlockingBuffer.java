@@ -59,7 +59,7 @@ public class BlockingBuffer<T extends Record<?>> extends AbstractBuffer<T> {
      * @param pipelineName   the name of the associated Pipeline
      */
     public BlockingBuffer(final int bufferCapacity, final int batchSize, final String pipelineName) {
-        super(PLUGIN_NAME, pipelineName);
+        super("BlockingBuffer", pipelineName);
         this.batchSize = batchSize;
         this.blockingQueue = new LinkedBlockingQueue<>(bufferCapacity);
         this.capacitySemaphore = new Semaphore(bufferCapacity);
