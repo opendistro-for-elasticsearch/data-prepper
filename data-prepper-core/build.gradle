@@ -26,7 +26,7 @@ dependencies {
     // compatibility with JDK 8). Our GitHub actions workflow uses JDK 14, which causes Elasticsearch jarhell to complain about
     // the latest micrometer version requiring JDK 15. Jacoco doesn't support 15 yet,
     // so this is why we're currently stuck on micrometer 1.5.5.
-    implementation "io.micrometer:micrometer-core:1.5.5"
+    implementation "io.micrometer:micrometer-core:1.6.4"
     implementation "io.micrometer:micrometer-registry-prometheus:1.5.5"
 
     testImplementation "org.hamcrest:hamcrest:2.2"
