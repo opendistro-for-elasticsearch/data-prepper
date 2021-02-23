@@ -27,7 +27,7 @@ dependencies {
     // the latest micrometer version requiring JDK 15. Jacoco doesn't support 15 yet,
     // so this is why we're currently stuck on micrometer 1.5.5.
     implementation "io.micrometer:micrometer-core:1.5.5"
-    implementation "io.micrometer:micrometer-registry-prometheus:1.5.5"
+    implementation "io.micrometer:micrometer-registry-prometheus:1.6.4"
 
     testImplementation "org.hamcrest:hamcrest:2.2"
     testImplementation "org.mockito:mockito-core:3.8.0"
