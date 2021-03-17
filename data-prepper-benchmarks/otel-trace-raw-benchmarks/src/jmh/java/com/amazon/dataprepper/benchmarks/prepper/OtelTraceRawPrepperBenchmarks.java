@@ -18,6 +18,7 @@ import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Threads;
 import org.openjdk.jmh.annotations.Warmup;
 
@@ -44,6 +45,11 @@ public class OtelTraceRawPrepperBenchmarks {
                 setProcessWorkers(concurrencyScale);
             }};
             otelTraceRawPrepper = new OTelTraceRawPrepper(pluginSetting);
+        }
+
+        @TearDown(Level.Trial)
+        public void shutdownOtelTraceRawPrepper() {
+            otelTraceRawPrepper.shutdown();
         }
     }
 
@@ -159,7 +165,7 @@ public class OtelTraceRawPrepperBenchmarks {
 
     @Benchmark
     @Fork(value = 1)
-    @Warmup(iterations = 0)
+    @Warmup(iterations = 2)
     public void benchmarkExecute(OtelTraceRawPrepperState otelTraceRawPrepperState, TestDataState testDataState) {
         otelTraceRawPrepperState.otelTraceRawPrepper.execute(testDataState.batch);
     }
