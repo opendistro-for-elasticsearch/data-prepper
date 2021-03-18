@@ -12,6 +12,10 @@ repositories {
     mavenCentral()
 }
 
+jmh {
+    jvmArgs = ['-Xms2048m -Xmx2048m']
+}
+
 dependencies {
     compile project(':data-prepper-plugins:otel-trace-raw-prepper')
     jmh "io.opentelemetry:opentelemetry-proto:${versionMap.opentelemetry_proto}"
