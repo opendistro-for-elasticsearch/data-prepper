@@ -25,8 +25,10 @@ import org.openjdk.jmh.annotations.Warmup;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class OtelTraceRawPrepperBenchmarks {
@@ -55,8 +57,9 @@ public class OtelTraceRawPrepperBenchmarks {
 
     @State(Scope.Thread)
     public static class TestDataState {
-        private List<byte[]> spanIds;
         private List<byte[]> traceIds;
+        private Map<byte[], byte[]> traceIdToRootSpanId;
+        private Map<byte[], List<byte[]>> traceIdToSpanIds;
         private static final Random RANDOM = new Random();
         private static final List<String> serviceNames = Arrays.asList("FRONTEND", "BACKEND", "PAYMENT", "CHECKOUT", "DATABASE");
         private static final List<String> traceGroups = Arrays.asList("tg1", "tg2", "tg3", "tg4", "tg5", "tg6", "tg7", "tg8", "tg9");
@@ -82,44 +85,56 @@ public class OtelTraceRawPrepperBenchmarks {
         /**
          * Gets a span id and adds to the list of existing span ids
          */
-        private byte[] getSpanId() {
+        private byte[] getSpanId(final byte[] traceId) {
             final byte[] spanId = getRandomBytes(8);
-            spanIds.add(spanId);
+            if (!traceIdToRootSpanId.containsKey(traceId)) {
+                traceIdToRootSpanId.put(traceId, spanId);
+            }
+            traceIdToSpanIds.compute(traceId, (trId, spanIds) -> {
+                if (spanIds == null) {
+                    spanIds = new ArrayList<>();
+                }
+                spanIds.add(spanId);
+                return spanIds;
+            });
             return spanId;
         }
 
-        /**
-         * Gets a parent id. 5% of the time will return null, indicating a root span. Otherwise picks a random
-         * spanid that is already existing
-         */
-        private byte[] getParentId() {
-            if(RANDOM.nextInt(20) == 0 || spanIds.isEmpty()) {
+        private byte[] getParentId(final byte[] traceId, final byte[] spanId) {
+            if(traceIdToRootSpanId.get(traceId) == spanId) {
                 return null;
             } else {
+                final List<byte[]> spanIds = traceIdToSpanIds.get(traceId);
                 return spanIds.get(RANDOM.nextInt(spanIds.size()));
             }
         }
 
-        @Setup(Level.Trial)
-        public void resetTraceSpanIdCaches() throws UnsupportedEncodingException {
-            spanIds = new ArrayList<>();
+        @Setup(Level.Iteration)
+        public void resetTraceSpanIdCaches() {
+            traceIdToRootSpanId = new HashMap<>();
+            traceIdToSpanIds = new HashMap<>();
             traceIds = new ArrayList<>();
         }
 
         @Setup(Level.Invocation)
-        public void generateBatch() throws UnsupportedEncodingException {
+        public void generateBatch() {
             batch = new ArrayList<>();
             for(int j=0; j<batchSize; j++) {
+                final byte[] traceId = getTraceId();
+                final byte[] spanId = getSpanId(traceId);
+                final byte[] parentId = getParentId(traceId, spanId);
                 batch.add(new Record<>(getExportTraceServiceRequest(
                         getResourceSpans(
                                 serviceNames.get(RANDOM.nextInt(serviceNames.size())),
                                 traceGroups.get(RANDOM.nextInt(traceGroups.size())),
-                                getSpanId(),
-                                getParentId(),
-                                getTraceId(),
+                                spanId,
+                                parentId,
+                                traceId,
                                 Span.SpanKind.SPAN_KIND_CLIENT
                         ))));
             }
+
+            Collections.shuffle(batch);
         }
 
         private static byte[] getRandomBytes(int len) {
@@ -129,7 +144,7 @@ public class OtelTraceRawPrepperBenchmarks {
         }
 
         public static ResourceSpans getResourceSpans(final String serviceName, final String spanName, final byte[]
-                spanId, final byte[] parentId, final byte[] traceId, final Span.SpanKind spanKind) throws UnsupportedEncodingException {
+                spanId, final byte[] parentId, final byte[] traceId, final Span.SpanKind spanKind) {
             final ByteString parentSpanId = parentId != null ? ByteString.copyFrom(parentId) : ByteString.EMPTY;
             return ResourceSpans.newBuilder()
                     .setResource(
