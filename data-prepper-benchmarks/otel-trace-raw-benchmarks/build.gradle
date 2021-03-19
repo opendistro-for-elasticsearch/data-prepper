@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
 group 'com.amazon'
@@ -26,6 +27,16 @@ task jmh(type: JavaExec, dependsOn: jmhClasses) {
     args '-t', 16
     args '-jvmArgsPrepend', '-Xmx5g'
     args '-jvmArgsPrepend', '-Xms5g'
+}
+
+shadowJar {
+    from sourceSets.jmh.output
+    from sourceSets.main.output
+    from project.configurations.jmhRuntime
+
+    manifest {
+        attributes("Main-Class": "org.openjdk.jmh.Main")
+    }
 }
 
 dependencies {
