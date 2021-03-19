@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id "me.champeau.gradle.jmh" version "0.5.3"
 }
 
 group 'com.amazon'
@@ -12,11 +11,26 @@ repositories {
     mavenCentral()
 }
 
-jmh {
-    jvmArgs = ['-Xms2048m -Xmx2048m']
+sourceSets {
+    jmh {
+        java.srcDirs = ['src/jmh/java']
+    }
+}
+
+task jmh(type: JavaExec, dependsOn: jmhClasses) {
+    classpath = sourceSets.jmh.runtimeClasspath
+    main = 'org.openjdk.jmh.Main'
+
+    args '-r', 300
+    args '-w', 300
+    args '-t', 16
+    args '-jvmArgsPrepend', '-Xmx5g'
+    args '-jvmArgsPrepend', '-Xms5g'
 }
 
 dependencies {
-    compile project(':data-prepper-plugins:otel-trace-raw-prepper')
-    jmh "io.opentelemetry:opentelemetry-proto:${versionMap.opentelemetry_proto}"
+    jmhCompile project(':data-prepper-plugins:otel-trace-raw-prepper')
+    jmhCompile "io.opentelemetry:opentelemetry-proto:${versionMap.opentelemetry_proto}"
+    jmhCompile 'org.openjdk.jmh:jmh-core:1.25'
+    jmhAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.25'
 }
