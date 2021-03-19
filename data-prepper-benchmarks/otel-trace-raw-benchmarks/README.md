@@ -13,7 +13,7 @@ can be provided to the plugin.
 
 ## Running the tests via JAR
 
-To run the tests via JAR, you can build the benchmark jar using the gradle task "jmhJar". This jar is an executable jar 
+To run the tests via JAR, you can build the benchmark jar using the gradle task "shadowJar". This jar is an executable jar 
 that runs the benchmark tests. Example command:
 
 ```
