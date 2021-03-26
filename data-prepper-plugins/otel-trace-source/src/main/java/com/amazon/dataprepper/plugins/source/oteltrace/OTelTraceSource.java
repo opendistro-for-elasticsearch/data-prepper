@@ -48,6 +48,7 @@ public class OTelTraceSource implements Source<Record<ExportTraceServiceRequest>
                             pluginMetrics
                     ))
                     .addService(new HealthGrpcService())
+                    .enableUnframedRequests(true)
                     .useClientTimeoutHeader(false);
 
             if (oTelTraceSourceConfig.hasHealthCheck()) {
