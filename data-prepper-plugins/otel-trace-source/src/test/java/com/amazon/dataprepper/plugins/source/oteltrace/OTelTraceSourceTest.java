@@ -144,7 +144,7 @@ public class OTelTraceSourceTest {
                 HttpData.copyOf(JsonFormat.printer().print(SUCCESS_REQUEST).getBytes()))
                 .aggregate()
                 .whenComplete((i, ex) -> {
-                    assertThat(i.status().code()).isEqualTo(415);
+                    assertThat(i.status().code()).isEqualTo(503);
                 }).join();
         WebClient.of().execute(RequestHeaders.builder()
                         .scheme(SessionProtocol.HTTP)
@@ -156,7 +156,7 @@ public class OTelTraceSourceTest {
                 HttpData.copyOf(JsonFormat.printer().print(FAILURE_REQUEST).getBytes()))
                 .aggregate()
                 .whenComplete((i, ex) -> {
-                    assertThat(i.status().code()).isEqualTo(415);
+                    assertThat(i.status().code()).isEqualTo(503);
                     //validateBuffer();
                 }).join();
 
@@ -174,7 +174,7 @@ public class OTelTraceSourceTest {
                 HttpData.copyOf(SUCCESS_REQUEST.toByteArray()))
                 .aggregate()
                 .whenComplete((i, ex) -> {
-                    assertThat(i.status().code()).isEqualTo(415);
+                    assertThat(i.status().code()).isEqualTo(503);
                 }).join();
         WebClient.of().execute(RequestHeaders.builder()
                         .scheme(SessionProtocol.HTTP)
@@ -186,7 +186,7 @@ public class OTelTraceSourceTest {
                 HttpData.copyOf(FAILURE_REQUEST.toByteArray()))
                 .aggregate()
                 .whenComplete((i, ex) -> {
-                    assertThat(i.status().code()).isEqualTo(415);
+                    assertThat(i.status().code()).isEqualTo(503);
                     //validateBuffer();
                 }).join();
     }
