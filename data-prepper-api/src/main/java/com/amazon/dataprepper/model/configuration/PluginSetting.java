@@ -4,6 +4,8 @@ import java.util.Map;
 
 public class PluginSetting {
 
+    private static final String UNEXPECTED_ATTRIBUTE_TYPE_MSG = "Unexpected type [%s] for attribute [%s]";
+
     private final String name;
     private final Map<String, Object> settings;
     private int processWorkers;
@@ -100,7 +102,7 @@ public class PluginSetting {
             return Integer.valueOf(String.valueOf(object));
         }
 
-        throw new IllegalArgumentException("Unexpected type for attribute: " + attribute);
+        throw new IllegalArgumentException(String.format(UNEXPECTED_ATTRIBUTE_TYPE_MSG, object.getClass(), attribute));
     }
 
     /**
@@ -120,7 +122,7 @@ public class PluginSetting {
             return String.valueOf(object);
         }
 
-        throw new IllegalArgumentException("Unexpected type for attribute: " + attribute);
+        throw new IllegalArgumentException(String.format(UNEXPECTED_ATTRIBUTE_TYPE_MSG, object.getClass(), attribute));
     }
 
     /**
@@ -142,7 +144,7 @@ public class PluginSetting {
             return Boolean.valueOf(String.valueOf(object));
         }
 
-        throw new IllegalArgumentException("Unexpected type for attribute: " + attribute);
+        throw new IllegalArgumentException(String.format(UNEXPECTED_ATTRIBUTE_TYPE_MSG, object.getClass(), attribute));
     }
 
     /**
@@ -164,7 +166,7 @@ public class PluginSetting {
             return Long.valueOf(String.valueOf(object));
         }
 
-        throw new IllegalArgumentException("Unexpected type for attribute: " + attribute);
+        throw new IllegalArgumentException(String.format(UNEXPECTED_ATTRIBUTE_TYPE_MSG, object.getClass(), attribute));
     }
 
 }
