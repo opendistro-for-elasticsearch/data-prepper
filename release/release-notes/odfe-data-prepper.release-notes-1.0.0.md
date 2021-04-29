@@ -7,8 +7,7 @@
 
 ## Compatibility
 ### Issue #1
-This release is intended to be used by version 1.13.2.1+ of the Trace Analytics Kibana plugin. The most recent Open Distro for Elasticsearch bundle contains version 1.13.2.0, so only use this version of Data Prepper if you have manually upgraded the Trace Analytics plugin.
-
+This release is compatible with unreleased features of the Trace Analytics Kibana plugin. At time of writing, these changes are currently in the main branch of the [plugin repo](https://github.com/opendistro-for-elasticsearch/trace-analytics), however they were not included in the official 1.13.2.0 ODFE bundled release. To use Data Prepper 1.0.0 at this time, please build the Trace Analytics plugin from source and install it to your ODFE cluster.
 
 ### Issue #2
 This release is backwards incompatible with data emitted by alpha/beta Data Prepper versions.
