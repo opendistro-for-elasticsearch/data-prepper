@@ -18,6 +18,7 @@ If your Elasticsearch cluster has ingested data from a previous version of Data 
    1. DELETE /otel-v1-apm-span-*
    2. DELETE /otel-v1-apm-service-map
    3. DELETE /_template/otel-v1-apm-span-index-template
+   4. DELETE _opendistro/_ism/policies/raw-span-policy
 3. Starting new instances of Data Prepper 1.0.0
 
 We know this is a poor experience and will try to avoid these kinds of breaking changes from Data Prepper 1.0.0 and Trace Analytics 1.13.2.1 onward.
