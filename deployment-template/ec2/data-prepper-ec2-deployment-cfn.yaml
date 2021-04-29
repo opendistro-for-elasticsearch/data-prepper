@@ -109,9 +109,8 @@ Resources:
               owner: root
               group: root
             "/etc/data-prepper/pipelines.yaml":
-              content: !If
-                - NoMasterUser
-                - !Sub |
+              content: !Sub
+                - |
                   entry-pipeline:
                     delay: "100"
                     source:
@@ -130,11 +129,7 @@ Resources:
                     prepper:
                       - otel_trace_raw_prepper:
                     sink:
-                      - elasticsearch:
-                          hosts: [ "${AWSElasticsearchEndpoint}" ]
-                          aws_sigv4: true
-                          aws_region: "${AWSElasticsearchRegion}"
-                          trace_analytics_raw: true
+                      - elasticsearch: ${elasticsearchConfig}
                   service-map-pipeline:
                     delay: "100"
                     source:
@@ -143,50 +138,20 @@ Resources:
                     prepper:
                       - service_map_stateful:
                     sink:
-                      - elasticsearch:
-                          hosts: [ "${AWSElasticsearchEndpoint}" ]
-                          aws_sigv4: true
-                          aws_region: "${AWSElasticsearchRegion}"
-                          trace_analytics_service_map: true
-                - !Sub |
-                  entry-pipeline:
-                    delay: "100"
-                    source:
-                      otel_trace_source:
-                        ssl: false
-                        health_check_service: true
-                    sink:
-                      - pipeline:
-                          name: "raw-pipeline"
-                      - pipeline:
-                          name: "service-map-pipeline"
-                  raw-pipeline:
-                    source:
-                      pipeline:
-                        name: "entry-pipeline"
-                    prepper:
-                      - otel_trace_raw_prepper:
-                    sink:
-                      - elasticsearch:
-                          hosts: [ "${AWSElasticsearchEndpoint}" ]
-                          aws_sigv4: false
-                          username: "${Username}"
-                          password: "${Password}"
-                          trace_analytics_raw: true
-                  service-map-pipeline:
-                    delay: "100"
-                    source:
-                      pipeline:
-                        name: "entry-pipeline"
-                    prepper:
-                      - service_map_stateful:
-                    sink:
-                      - elasticsearch:
-                          hosts: [ "${AWSElasticsearchEndpoint}" ]
-                          aws_sigv4: false
-                          username: "${Username}"
-                          password: "${Password}"
-                          trace_analytics_service_map: true
+                      - elasticsearch: ${elasticsearchConfig}
+                - elasticsearchConfig: !If
+                    - NoMasterUser
+                    - !Sub "\n
+                    \        hosts: [ \"${AWSElasticsearchEndpoint}\" ]\n
+                    \        aws_sigv4: true\n
+                    \        aws_region: \"${AWSElasticsearchRegion}\"\n
+                    \        trace_analytics_service_map: true"
+                    - !Sub "\n
+                    \        hosts: [ \"${AWSElasticsearchEndpoint}\" ]\n
+                    \        aws_sigv4: false\n
+                    \        username: \"${Username}\"\n
+                    \        password: \"${Password}\"\n
+                    \        trace_analytics_service_map: true"
               mode: "000400"
               owner: root
               group: root
