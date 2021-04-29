@@ -1,7 +1,7 @@
 # 2021-05-xx Version 1.0.0
 
 ## Highlights
-* Data Prepper now builds using version 1.0+ of the OpenTelemetry tracing specification
+* Now builds using version 1.0+ of the OpenTelemetry tracing specification
 * Additional TraceGroup fields are emitted for enhanced searching and filtering with the Trace Analytics Kibana plugin
 * An OpenSearch-compatible version of Data Prepper has been released under the [opensearch-project repo](https://github.com/opensearch-project/data-prepper/releases)
 
@@ -11,7 +11,7 @@ This release is intended to be used by version 1.13.2.1+ of the Trace Analytics 
 
 
 ### Issue #2
-This release contains is backwards incompatible with data emitted by alpha/beta Data Prepper versions.
+This release is backwards incompatible with data emitted by alpha/beta Data Prepper versions.
 
 If your Elasticsearch cluster has ingested data from a previous version of Data Prepper, you will need to delete the data before running this release of Data Prepper by:
 1. Stopping any existing instances of Data Prepper
