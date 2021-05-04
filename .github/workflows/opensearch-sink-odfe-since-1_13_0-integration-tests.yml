@@ -5,8 +5,8 @@ name: Data Prepper elasticsearch sink integration tests with ODFE >= 1.13.0
 
 on:
   push:
+    branches: [ main ]
   pull_request:
-    types: [opened]
   workflow_dispatch:
 
 jobs:
