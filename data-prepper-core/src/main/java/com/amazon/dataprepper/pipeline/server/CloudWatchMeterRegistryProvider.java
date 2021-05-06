@@ -21,7 +21,7 @@ import java.util.Properties;
  */
 public class CloudWatchMeterRegistryProvider {
     private static final String CLOUDWATCH_PROPERTIES = "cloudwatch.properties";
-    private static final Logger LOG = LoggerFactory.getLogger(PrometheusMetricsHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CloudWatchMeterRegistryProvider.class);
 
     private final CloudWatchMeterRegistry cloudWatchMeterRegistry;
 
