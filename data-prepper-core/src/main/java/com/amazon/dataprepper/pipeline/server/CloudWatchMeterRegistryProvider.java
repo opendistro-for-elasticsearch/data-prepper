@@ -9,8 +9,9 @@ import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
 import java.util.Properties;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Provides {@link CloudWatchMeterRegistry} that enables publishing metrics to AWS Cloudwatch. Registry
@@ -30,10 +31,12 @@ public class CloudWatchMeterRegistryProvider {
     }
 
     public CloudWatchMeterRegistryProvider(
-            final String cwPropertiesFile,
-            final CloudWatchAsyncClient cloudWatchClient) {
-        final CloudWatchConfig cloudWatchConfig = createCloudWatchConfig(cwPropertiesFile);
-        this.cloudWatchMeterRegistry = new CloudWatchMeterRegistry(cloudWatchConfig, Clock.SYSTEM, cloudWatchClient);
+            final String cloudWatchPropertiesFilePath,
+            final CloudWatchAsyncClient cloudWatchAsyncClient) {
+        final CloudWatchConfig cloudWatchConfig = createCloudWatchConfig(
+                requireNonNull(cloudWatchPropertiesFilePath, "cloudWatchPropertiesFilePath must not be null"));
+        this.cloudWatchMeterRegistry = new CloudWatchMeterRegistry(cloudWatchConfig, Clock.SYSTEM,
+                requireNonNull(cloudWatchAsyncClient, "cloudWatchAsyncClient must not be null"));
     }
 
     /**
@@ -46,13 +49,18 @@ public class CloudWatchMeterRegistryProvider {
     /**
      * Returns CloudWatchConfig using the properties from {@link #CLOUDWATCH_PROPERTIES}
      */
-    private CloudWatchConfig createCloudWatchConfig(final String cwPropertiesFile) {
+    private CloudWatchConfig createCloudWatchConfig(final String cloudWatchPropertiesFilePath) {
         CloudWatchConfig cloudWatchConfig = null;
-        try (final InputStream inputStream = Objects.requireNonNull(getClass()
-                .getClassLoader().getResourceAsStream(cwPropertiesFile))) {
+        try (final InputStream inputStream = requireNonNull(getClass().getClassLoader()
+                .getResourceAsStream(cloudWatchPropertiesFilePath))) {
             final Properties cloudwatchProperties = new Properties();
             cloudwatchProperties.load(inputStream);
-            cloudWatchConfig = cloudwatchProperties::getProperty; //overriding getKey() from CloudWatchConfig
+            cloudWatchConfig = new CloudWatchConfig() {
+                @Override
+                public String get(final String key) {
+                    return cloudwatchProperties.getProperty(key);
+                }
+            };
         } catch (IOException ex) {
             LOG.error("Encountered exception in creating CloudWatchConfig for CloudWatchMeterRegistry, " +
                     "Proceeding without metrics", ex);
