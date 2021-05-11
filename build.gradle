@@ -1,56 +1,76 @@
+plugins {
+	id "com.diffplug.spotless" version "5.12.4"
+}
+
 apply from: file("${rootDir}/build-resources.gradle")
 allprojects {
-    group = 'com.amazon'
-    version = '0.8.0-beta'
-    repositories {
-        mavenCentral()
-        maven { url "https://jitpack.io" }
-    }
+	apply plugin: 'com.diffplug.spotless'
+
+	group = 'com.amazon'
+	version = '0.8.0-beta'
+	repositories {
+		mavenCentral()
+		maven { url "https://jitpack.io" }
+	}
+
+	spotless {
+		format 'misc', {
+			target '*.gradle', '*.md', '.gitignore', '*.yml', '.yaml'
+
+			trimTrailingWhitespace()
+			endWithNewline()
+		}
+	}
 }
 
 subprojects {
-    apply plugin: 'java'
-    apply plugin: 'jacoco'
-    sourceCompatibility = '1.8'
-    dependencies {
-        implementation "com.google.guava:guava:29.0-jre"
-        implementation "org.apache.logging.log4j:log4j-core:2.14.0"
-        implementation "org.slf4j:slf4j-api:1.7.30"
-        implementation "org.apache.logging.log4j:log4j-slf4j-impl:2.14.0"
-        testImplementation("junit:junit:4.13") {
-            exclude group: 'org.hamcrest' // workaround for jarHell
-        }
-    }
-    build.dependsOn test
-    jacocoTestReport {
-        dependsOn test // tests are required to run before generating the report
-    }
+	apply plugin: 'java'
+	apply plugin: 'jacoco'
+	sourceCompatibility = '1.8'
+	spotless {
+		java {
+			googleJavaFormat('1.8')
+		}
+	}
+	dependencies {
+		implementation "com.google.guava:guava:29.0-jre"
+		implementation "org.apache.logging.log4j:log4j-core:2.14.0"
+		implementation "org.slf4j:slf4j-api:1.7.30"
+		implementation "org.apache.logging.log4j:log4j-slf4j-impl:2.14.0"
+		testImplementation("junit:junit:4.13") {
+			exclude group: 'org.hamcrest' // workaround for jarHell
+		}
+	}
+	build.dependsOn test
+	jacocoTestReport {
+		dependsOn test // tests are required to run before generating the report
+	}
 
-    task allDeps(type: DependencyReportTask) {}
+	task allDeps(type: DependencyReportTask) {}
 }
 
 configure(coreProjects) {
-    jacocoTestReport {
-        dependsOn test // tests are required to run before generating the report
-        reports {
-            xml.enabled false
-            csv.enabled false
-            html.destination file("${buildDir}/reports/jacocoHtml")
-        }
-    }
-    test {
-        useJUnit()
-        finalizedBy jacocoTestReport // report is always generated after tests run
-    }
-    jacocoTestCoverageVerification {
-        dependsOn jacocoTestReport
-        violationRules {
-            rule {
-                limit {
-                    minimum = 0.65 //TODO increase this to 0.75
-                }
-            }
-        }
-    }
-    check.dependsOn jacocoTestCoverageVerification
+	jacocoTestReport {
+		dependsOn test // tests are required to run before generating the report
+		reports {
+			xml.enabled false
+			csv.enabled false
+			html.destination file("${buildDir}/reports/jacocoHtml")
+		}
+	}
+	test {
+		useJUnit()
+		finalizedBy jacocoTestReport // report is always generated after tests run
+	}
+	jacocoTestCoverageVerification {
+		dependsOn jacocoTestReport
+		violationRules {
+			rule {
+				limit {
+					minimum = 0.65 //TODO increase this to 0.75
+				}
+			}
+		}
+	}
+	check.dependsOn jacocoTestCoverageVerification
 }
