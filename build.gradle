@@ -15,7 +15,7 @@ allprojects {
 
 	spotless {
 		format 'misc', {
-			target '*.gradle', '*.md', '.gitignore', '*.yml', '.yaml'
+			target '*.gradle', '*.md', '.gitignore', '*.yml', '*.yaml'
 
 			trimTrailingWhitespace()
 			endWithNewline()
