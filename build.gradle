@@ -16,7 +16,7 @@ allprojects {
 	spotless {
 		format 'misc', {
 			target '*.gradle', '*.md', '.gitignore', '*.yml', '*.yaml'
-
+			// TODO: enrich format rules
 			trimTrailingWhitespace()
 			endWithNewline()
 		}
@@ -29,7 +29,8 @@ subprojects {
 	sourceCompatibility = '1.8'
 	spotless {
 		java {
-			googleJavaFormat('1.8')
+			// TODO: enrich format rules
+			removeUnusedImports()
 		}
 	}
 	dependencies {
