@@ -41,6 +41,8 @@ import java.util.UUID;
 import static com.amazon.dataprepper.TestDataProvider.VALID_DATA_PREPPER_CLOUDWATCH_METRICS_CONFIG_FILE;
 import static com.amazon.dataprepper.TestDataProvider.VALID_DATA_PREPPER_MULTIPLE_METRICS_CONFIG_FILE;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.RETURNS_SELF;
+import static org.mockito.Mockito.mock;
 
 
 public class DataPrepperServerTest {
@@ -55,13 +57,13 @@ public class DataPrepperServerTest {
         //to avoid ConcurrentModificationException
         final Object[] registeredMeterRegistries = meterRegistries.toArray();
         for (final Object meterRegistry : registeredMeterRegistries) {
-            Metrics.globalRegistry.remove((MeterRegistry) meterRegistry);
+            Metrics.removeRegistry((MeterRegistry) meterRegistry);
         }
         Metrics.addRegistry(prometheusMeterRegistry);
     }
 
     private void setupDataPrepper() {
-        dataPrepper = Mockito.mock(DataPrepper.class);
+        dataPrepper = mock(DataPrepper.class);
         DataPrepper.configure(TestDataProvider.VALID_DATA_PREPPER_DEFAULT_LOG4J_CONFIG_FILE);
     }
 
@@ -157,7 +159,7 @@ public class DataPrepperServerTest {
 
     @Test
     public void testNonPrometheusMeterRegistry() throws Exception {
-        final CloudWatchMeterRegistry cloudWatchMeterRegistry = Mockito.mock(CloudWatchMeterRegistry.class);
+        final CloudWatchMeterRegistry cloudWatchMeterRegistry = mock(CloudWatchMeterRegistry.class);
         final CompositeMeterRegistry compositeMeterRegistry = new CompositeMeterRegistry();
         compositeMeterRegistry.add(cloudWatchMeterRegistry);
         final DataPrepperConfiguration dataPrepperConfiguration = DataPrepperConfiguration.fromFile(
@@ -180,7 +182,7 @@ public class DataPrepperServerTest {
     @Test
     public void testMultipleMeterRegistries() throws Exception {
         //for system metrics
-        final CloudWatchMeterRegistry cloudWatchMeterRegistryForSystem = Mockito.mock(CloudWatchMeterRegistry.class);
+        final CloudWatchMeterRegistry cloudWatchMeterRegistryForSystem = mock(CloudWatchMeterRegistry.class);
         final PrometheusMeterRegistry prometheusMeterRegistryForSystem =
                 new PrometheusRegistryMockScrape(PrometheusConfig.DEFAULT, UUID.randomUUID().toString());
         final CompositeMeterRegistry compositeMeterRegistry = new CompositeMeterRegistry();
@@ -188,12 +190,9 @@ public class DataPrepperServerTest {
         compositeMeterRegistry.add(prometheusMeterRegistryForSystem);
 
         //for data prepper metrics
-        final CloudWatchMeterRegistry cloudWatchMeterRegistryForDataPrepper =
-                Mockito.mock(CloudWatchMeterRegistry.class);
         final PrometheusMeterRegistry prometheusMeterRegistryForDataPrepper =
                 new PrometheusRegistryMockScrape(PrometheusConfig.DEFAULT, UUID.randomUUID().toString());
         setRegistry(prometheusMeterRegistryForDataPrepper);
-        Metrics.globalRegistry.add(cloudWatchMeterRegistryForDataPrepper);
 
         final DataPrepperConfiguration dataPrepperConfiguration = DataPrepperConfiguration.fromFile(
                 new File(VALID_DATA_PREPPER_MULTIPLE_METRICS_CONFIG_FILE));
