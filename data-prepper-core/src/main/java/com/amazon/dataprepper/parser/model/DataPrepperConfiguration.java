@@ -2,7 +2,6 @@ package com.amazon.dataprepper.parser.model;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -21,7 +20,7 @@ public class DataPrepperConfiguration {
     private String keyStoreFilePath = "";
     private String keyStorePassword = "";
     private String privateKeyPassword = "";
-    private List<MeterRegistryType> metricsRegistry = DEFAULT_METRICS_REGISTRY;
+    private List<MeterRegistryType> metricsRegistries = DEFAULT_METRICS_REGISTRY;
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new YAMLFactory());
 
@@ -49,13 +48,13 @@ public class DataPrepperConfiguration {
             @JsonProperty("keyStorePassword") final String keyStorePassword,
             @JsonProperty("privateKeyPassword") final String privateKeyPassword,
             @JsonProperty("serverPort") final String serverPort,
-            @JsonProperty("metricsRegistry") final List<MeterRegistryType> metricsRegistry
+            @JsonProperty("metricsRegistries") final List<MeterRegistryType> metricsRegistries
     ) {
         setSsl(ssl);
         this.keyStoreFilePath = keyStoreFilePath != null ? keyStoreFilePath : "";
         this.keyStorePassword = keyStorePassword != null ? keyStorePassword : "";
         this.privateKeyPassword = privateKeyPassword != null ? privateKeyPassword : "";
-        this.metricsRegistry = metricsRegistry != null && !metricsRegistry.isEmpty() ? metricsRegistry : DEFAULT_METRICS_REGISTRY;
+        this.metricsRegistries = metricsRegistries != null && !metricsRegistries.isEmpty() ? metricsRegistries : DEFAULT_METRICS_REGISTRY;
         setServerPort(serverPort);
     }
 
@@ -79,12 +78,12 @@ public class DataPrepperConfiguration {
         return privateKeyPassword;
     }
 
-    public List<MeterRegistryType> getMetricsRegistry() {
-        return metricsRegistry;
+    public List<MeterRegistryType> getMetricsRegistries() {
+        return metricsRegistries;
     }
 
     public boolean isMeterRegistryTypeConfigured(final MeterRegistryType meterRegistryType) {
-        return metricsRegistry.stream()
+        return metricsRegistries.stream()
                 .anyMatch(configuredMeterRegistryType -> configuredMeterRegistryType.equals(meterRegistryType));
     }
 

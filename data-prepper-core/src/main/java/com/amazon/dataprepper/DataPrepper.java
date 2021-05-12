@@ -74,7 +74,7 @@ public class DataPrepper {
      * Meters.
      */
     private static void startMeterRegistryForDataPrepper() {
-        final List<MeterRegistryType> configuredMeterRegistries = configuration.getMetricsRegistry();
+        final List<MeterRegistryType> configuredMeterRegistries = configuration.getMetricsRegistries();
         configuredMeterRegistries.forEach(DataPrepper::createAndAttachMeterRegistry);
     }
 
@@ -90,7 +90,7 @@ public class DataPrepper {
     }
 
     private static void configureMeterRegistry() {
-        configuration.getMetricsRegistry().forEach(meterRegistryType ->
+        configuration.getMetricsRegistries().forEach(meterRegistryType ->
                 systemMeterRegistry.add(MeterRegistryType.getDefaultMeterRegistryForType(meterRegistryType)));
         new ClassLoaderMetrics().bindTo(systemMeterRegistry);
         new JvmMemoryMetrics().bindTo(systemMeterRegistry);
