@@ -3,6 +3,8 @@ package com.amazon.dataprepper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+
 /**
  * Execute entry into Data Prepper.
  */
@@ -14,6 +16,8 @@ public class DataPrepperExecute {
 
         if(args.length > 1) {
             DataPrepper.configure(args[1]);
+        } else {
+            DataPrepper.configure(null); //this configures with default values
         }
         final DataPrepper dataPrepper = DataPrepper.getInstance();
         if (args.length > 0) {
