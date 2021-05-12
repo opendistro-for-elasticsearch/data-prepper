@@ -9,7 +9,7 @@ public enum MeterRegistryType {
     Prometheus,
     CloudWatch;
 
-    public static MeterRegistry getDefaultRegistryForType(final MeterRegistryType meterRegistryType) {
+    public static MeterRegistry getDefaultMeterRegistryForType(final MeterRegistryType meterRegistryType) {
         MeterRegistry meterRegistry = null;
         switch (meterRegistryType) {
             case Prometheus:

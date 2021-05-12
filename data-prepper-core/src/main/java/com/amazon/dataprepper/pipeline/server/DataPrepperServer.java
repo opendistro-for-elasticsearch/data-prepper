@@ -48,7 +48,7 @@ public class DataPrepperServer {
             throw new RuntimeException("Failed to create server", e);
         }
 
-        if (dataPrepperConfiguration.isMeterRegistryConfigured(MeterRegistryType.Prometheus)) {
+        if (dataPrepperConfiguration.isMeterRegistryTypeConfigured(MeterRegistryType.Prometheus)) {
             final PrometheusMeterRegistry prometheusMeterRegistryForDataPrepper =
                     getPrometheusMeterRegistryFromRegistries(Metrics.globalRegistry.getRegistries());
             server.createContext("/metrics/prometheus", new PrometheusMetricsHandler(prometheusMeterRegistryForDataPrepper));

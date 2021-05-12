@@ -70,8 +70,8 @@ public class DataPrepper {
     }
 
     /**
-     * Creates MeterRegistry that are explicitly needed to be scrapped for metrics e.g. PrometheusMeterRegistry; the
-     * MeterRegistry is then registered with globalRegistry for easy access during processing.
+     * Creates instances of configured MeterRegistry and registers to {@link Metrics} globalRegistry to be used by
+     * Meters.
      */
     private static void startMeterRegistryForDataPrepper() {
         final List<MeterRegistryType> configuredMeterRegistries = configuration.getMetricsRegistry();
@@ -91,7 +91,7 @@ public class DataPrepper {
 
     private static void configureMeterRegistry() {
         configuration.getMetricsRegistry().forEach(meterRegistryType ->
-                systemMeterRegistry.add(MeterRegistryType.getDefaultRegistryForType(meterRegistryType)));
+                systemMeterRegistry.add(MeterRegistryType.getDefaultMeterRegistryForType(meterRegistryType)));
         new ClassLoaderMetrics().bindTo(systemMeterRegistry);
         new JvmMemoryMetrics().bindTo(systemMeterRegistry);
         new JvmGcMetrics().bindTo(systemMeterRegistry);

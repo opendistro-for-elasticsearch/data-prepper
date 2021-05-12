@@ -32,23 +32,23 @@ public class DataPrepperConfigurationTests {
     public void testDefaultMetricsRegistry() {
         final DataPrepperConfiguration dataPrepperConfiguration =
                 DataPrepperConfiguration.DEFAULT_CONFIG;
-        Assert.assertTrue(dataPrepperConfiguration.isMeterRegistryConfigured(MeterRegistryType.Prometheus));
+        Assert.assertTrue(dataPrepperConfiguration.isMeterRegistryTypeConfigured(MeterRegistryType.Prometheus));
     }
 
     @Test
     public void testCloudWatchMetricsRegistry() {
         final DataPrepperConfiguration dataPrepperConfiguration =
                 DataPrepperConfiguration.fromFile(new File(VALID_DATA_PREPPER_CLOUDWATCH_METRICS_CONFIG_FILE));
-        Assert.assertTrue(dataPrepperConfiguration.isMeterRegistryConfigured(MeterRegistryType.CloudWatch));
-        Assert.assertFalse(dataPrepperConfiguration.isMeterRegistryConfigured(MeterRegistryType.Prometheus));
+        Assert.assertTrue(dataPrepperConfiguration.isMeterRegistryTypeConfigured(MeterRegistryType.CloudWatch));
+        Assert.assertFalse(dataPrepperConfiguration.isMeterRegistryTypeConfigured(MeterRegistryType.Prometheus));
     }
 
     @Test
     public void testMultipleMetricsRegistry() {
         final DataPrepperConfiguration dataPrepperConfiguration =
                 DataPrepperConfiguration.fromFile(new File(VALID_DATA_PREPPER_MULTIPLE_METRICS_CONFIG_FILE));
-        Assert.assertTrue(dataPrepperConfiguration.isMeterRegistryConfigured(MeterRegistryType.CloudWatch));
-        Assert.assertTrue(dataPrepperConfiguration.isMeterRegistryConfigured(MeterRegistryType.Prometheus));
+        Assert.assertTrue(dataPrepperConfiguration.isMeterRegistryTypeConfigured(MeterRegistryType.CloudWatch));
+        Assert.assertTrue(dataPrepperConfiguration.isMeterRegistryTypeConfigured(MeterRegistryType.Prometheus));
     }
 
     @Test(expected = IllegalArgumentException.class)

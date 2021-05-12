@@ -83,9 +83,9 @@ public class DataPrepperConfiguration {
         return metricsRegistry;
     }
 
-    public boolean isMeterRegistryConfigured(final MeterRegistryType meterRegistryType) {
+    public boolean isMeterRegistryTypeConfigured(final MeterRegistryType meterRegistryType) {
         return metricsRegistry.stream()
-                .anyMatch(configuredMeterRegistry -> configuredMeterRegistry.equals(meterRegistryType));
+                .anyMatch(configuredMeterRegistryType -> configuredMeterRegistryType.equals(meterRegistryType));
     }
 
     private void setSsl(final Boolean ssl) {
