@@ -4,7 +4,6 @@ import com.amazon.dataprepper.parser.PipelineParser;
 import com.amazon.dataprepper.parser.model.DataPrepperConfiguration;
 import com.amazon.dataprepper.parser.model.MetricRegistryType;
 import com.amazon.dataprepper.pipeline.Pipeline;
-import com.amazon.dataprepper.pipeline.server.CloudWatchMeterRegistryProvider;
 import com.amazon.dataprepper.pipeline.server.DataPrepperServer;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
@@ -13,16 +12,12 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
-import io.micrometer.prometheus.PrometheusConfig;
-import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-
-import static java.lang.String.format;
 
 /**
  * DataPrepper is the entry point into the execution engine. An instance of this class is provided by
@@ -84,20 +79,8 @@ public class DataPrepper {
      */
     private static void startMeterRegistryForDataPrepper() {
         final List<MetricRegistryType> configuredMetricRegistryTypes = configuration.getMetricRegistryTypes();
-        configuredMetricRegistryTypes.forEach(DataPrepper::createAndAttachMeterRegistry);
-    }
-
-    private static void createAndAttachMeterRegistry(final MetricRegistryType metricRegistryType) {
-        switch (metricRegistryType) {
-            case Prometheus:
-                Metrics.addRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT));
-                break;
-            case CloudWatch:
-                Metrics.addRegistry(new CloudWatchMeterRegistryProvider().getCloudWatchMeterRegistry());
-                break;
-            default:
-                throw new IllegalArgumentException(format("Invalid metricRegistryType %s", metricRegistryType));
-        }
+        configuredMetricRegistryTypes.forEach(metricRegistryType -> Metrics.addRegistry(MetricRegistryType
+                .getDefaultMeterRegistryForType(metricRegistryType)));
     }
 
     private static void configureMeterRegistry() {
