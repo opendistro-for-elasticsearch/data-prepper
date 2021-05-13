@@ -192,7 +192,7 @@ Resources:
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region} --configsets default
           nohup /usr/local/bin/$RELEASE/data-prepper-tar-install.sh /etc/data-prepper/pipelines.yaml /etc/data-prepper/data-prepper-config.yaml > /var/log/data-prepper.out &
           sleep 5s
-          export EXCEPTION_MSG=$(echo $(grep -E "Exception" /var/log/data-prepper.out) | iconv -t utf-8)
+          export EXCEPTION_MSG=$(grep -E "Exception" /var/log/data-prepper.out)
           if [[ $EXCEPTION_MSG == "" ]]
           then
              /opt/aws/bin/cfn-signal --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
