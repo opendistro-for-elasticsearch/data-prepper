@@ -14,8 +14,13 @@ allprojects {
     }
 
     spotless {
+        format 'markdown', {
+            target '*.md'
+            // TODO: enrich format rules
+            endWithNewline()
+        }
         format 'misc', {
-            target '*.md', '.gitignore', '*.yml', '*.yaml'
+            target '.gitignore', '*.yml', '*.yaml'
             // TODO: enrich format rules
             trimTrailingWhitespace()
             endWithNewline()
