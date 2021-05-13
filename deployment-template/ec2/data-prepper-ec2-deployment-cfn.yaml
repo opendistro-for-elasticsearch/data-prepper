@@ -191,7 +191,14 @@ Resources:
           tar -xzf /tmp/$RELEASE.tar.gz --directory /usr/local/bin
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region} --configsets default
           nohup /usr/local/bin/$RELEASE/data-prepper-tar-install.sh /etc/data-prepper/pipelines.yaml /etc/data-prepper/data-prepper-config.yaml > /var/log/data-prepper.out &
-          /opt/aws/bin/cfn-signal --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
+          sleep 5s
+          export EXCEPTION_MSG=$(echo $(grep -E "Exception" /var/log/data-prepper.out) | iconv -t utf-8)
+          if [[ $EXCEPTION_MSG == "" ]]
+          then
+             /opt/aws/bin/cfn-signal --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
+          else
+             /opt/aws/bin/cfn-signal -s false --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
+          fi
     CreationPolicy:
       ResourceSignal:
         Count: 1
