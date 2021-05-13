@@ -2,7 +2,6 @@ package com.amazon.dataprepper.pipeline.server;
 
 import com.amazon.dataprepper.DataPrepper;
 import com.amazon.dataprepper.parser.model.DataPrepperConfiguration;
-import com.amazon.dataprepper.parser.model.MeterRegistryType;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsParameters;
@@ -48,22 +47,23 @@ public class DataPrepperServer {
             throw new RuntimeException("Failed to create server", e);
         }
 
-        if (dataPrepperConfiguration.isMeterRegistryTypeConfigured(MeterRegistryType.Prometheus)) {
-            final PrometheusMeterRegistry prometheusMeterRegistryForDataPrepper =
-                    getPrometheusMeterRegistryFromRegistries(Metrics.globalRegistry.getRegistries());
+        getPrometheusMeterRegistryFromRegistries(Metrics.globalRegistry.getRegistries()).ifPresent(meterRegistry -> {
+            final PrometheusMeterRegistry prometheusMeterRegistryForDataPrepper = (PrometheusMeterRegistry) meterRegistry;
             server.createContext("/metrics/prometheus", new PrometheusMetricsHandler(prometheusMeterRegistryForDataPrepper));
-            final PrometheusMeterRegistry prometheusMeterRegistryForSystem =
-                    getPrometheusMeterRegistryFromRegistries(DataPrepper.getSystemMeterRegistry().getRegistries());
-            server.createContext("/metrics/sys", new PrometheusMetricsHandler(prometheusMeterRegistryForSystem));
-        }
+        });
+
+        getPrometheusMeterRegistryFromRegistries(DataPrepper.getSystemMeterRegistry().getRegistries()).ifPresent(
+                meterRegistry -> {
+                    final PrometheusMeterRegistry prometheusMeterRegistryForSystem = (PrometheusMeterRegistry) meterRegistry;
+                    server.createContext("/metrics/sys", new PrometheusMetricsHandler(prometheusMeterRegistryForSystem));
+                });
         server.createContext("/list", new ListPipelinesHandler(dataPrepper));
         server.createContext("/shutdown", new ShutdownHandler(dataPrepper));
     }
 
-    private PrometheusMeterRegistry getPrometheusMeterRegistryFromRegistries(final Set<MeterRegistry> meterRegistries) {
-        final Optional<MeterRegistry> prometheusMeterRegistry = meterRegistries.stream().filter(meterRegistry ->
+    private Optional<MeterRegistry> getPrometheusMeterRegistryFromRegistries(final Set<MeterRegistry> meterRegistries) {
+        return meterRegistries.stream().filter(meterRegistry ->
                 meterRegistry instanceof PrometheusMeterRegistry).findFirst();
-        return (PrometheusMeterRegistry) prometheusMeterRegistry.get();
     }
 
     /**

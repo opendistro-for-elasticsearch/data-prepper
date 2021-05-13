@@ -15,7 +15,7 @@ public class DataPrepperExecute {
         if(args.length > 1) {
             DataPrepper.configure(args[1]);
         } else {
-            DataPrepper.configure(null); //this configures with default values
+            DataPrepper.configureWithDefaults();
         }
         final DataPrepper dataPrepper = DataPrepper.getInstance();
         if (args.length > 0) {

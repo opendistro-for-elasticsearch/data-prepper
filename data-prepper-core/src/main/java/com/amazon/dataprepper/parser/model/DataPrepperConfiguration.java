@@ -14,13 +14,13 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
  * Class to hold configuration for DataPrepper, including server port and Log4j settings
  */
 public class DataPrepperConfiguration {
-    private static final List<MeterRegistryType> DEFAULT_METRICS_REGISTRY = Collections.singletonList(MeterRegistryType.Prometheus);
+    private static final List<MetricRegistryType> DEFAULT_METRIC_REGISTRY_TYPE = Collections.singletonList(MetricRegistryType.Prometheus);
     private int serverPort = 4900;
     private boolean ssl = true;
     private String keyStoreFilePath = "";
     private String keyStorePassword = "";
     private String privateKeyPassword = "";
-    private List<MeterRegistryType> metricsRegistries = DEFAULT_METRICS_REGISTRY;
+    private List<MetricRegistryType> metricRegistries = DEFAULT_METRIC_REGISTRY_TYPE;
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new YAMLFactory());
 
@@ -48,13 +48,13 @@ public class DataPrepperConfiguration {
             @JsonProperty("keyStorePassword") final String keyStorePassword,
             @JsonProperty("privateKeyPassword") final String privateKeyPassword,
             @JsonProperty("serverPort") final String serverPort,
-            @JsonProperty("metricsRegistries") final List<MeterRegistryType> metricsRegistries
+            @JsonProperty("metricRegistries") final List<MetricRegistryType> metricRegistries
     ) {
         setSsl(ssl);
         this.keyStoreFilePath = keyStoreFilePath != null ? keyStoreFilePath : "";
         this.keyStorePassword = keyStorePassword != null ? keyStorePassword : "";
         this.privateKeyPassword = privateKeyPassword != null ? privateKeyPassword : "";
-        this.metricsRegistries = metricsRegistries != null && !metricsRegistries.isEmpty() ? metricsRegistries : DEFAULT_METRICS_REGISTRY;
+        this.metricRegistries = metricRegistries != null && !metricRegistries.isEmpty() ? metricRegistries : DEFAULT_METRIC_REGISTRY_TYPE;
         setServerPort(serverPort);
     }
 
@@ -78,13 +78,13 @@ public class DataPrepperConfiguration {
         return privateKeyPassword;
     }
 
-    public List<MeterRegistryType> getMetricsRegistries() {
-        return metricsRegistries;
+    public List<MetricRegistryType> getMetricRegistryTypes() {
+        return metricRegistries;
     }
 
-    public boolean isMeterRegistryTypeConfigured(final MeterRegistryType meterRegistryType) {
-        return metricsRegistries.stream()
-                .anyMatch(configuredMeterRegistryType -> configuredMeterRegistryType.equals(meterRegistryType));
+    public boolean isMeterRegistryTypeConfigured(final MetricRegistryType metricRegistryType) {
+        return metricRegistries.stream()
+                .anyMatch(configuredMeterRegistryType -> configuredMeterRegistryType.equals(metricRegistryType));
     }
 
     private void setSsl(final Boolean ssl) {

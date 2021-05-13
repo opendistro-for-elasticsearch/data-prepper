@@ -2,7 +2,7 @@ package com.amazon.dataprepper;
 
 import com.amazon.dataprepper.parser.PipelineParser;
 import com.amazon.dataprepper.parser.model.DataPrepperConfiguration;
-import com.amazon.dataprepper.parser.model.MeterRegistryType;
+import com.amazon.dataprepper.parser.model.MetricRegistryType;
 import com.amazon.dataprepper.pipeline.Pipeline;
 import com.amazon.dataprepper.pipeline.server.CloudWatchMeterRegistryProvider;
 import com.amazon.dataprepper.pipeline.server.DataPrepperServer;
@@ -23,6 +23,8 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.String.format;
+
 /**
  * DataPrepper is the entry point into the execution engine. An instance of this class is provided by
  * {@link #getInstance()} method and the same can eb used to trigger execution via {@link #execute(String)} ()} of the
@@ -42,12 +44,19 @@ public class DataPrepper {
     private static DataPrepperConfiguration configuration;
 
     /**
-     * Set the DataPrepperConfiguration from file, if exists; else use default configuration
+     * Set the DataPrepperConfiguration from file
      * @param configurationFile File containing DataPrepperConfiguration yaml
      */
-    public static void configure(@Nullable final String configurationFile) {
-        configuration = configurationFile == null ? DataPrepperConfiguration.DEFAULT_CONFIG :
-                DataPrepperConfiguration.fromFile(new File(configurationFile));
+    public static void configure(final String configurationFile) {
+        configuration = DataPrepperConfiguration.fromFile(new File(configurationFile));
+        configureMeterRegistry();
+    }
+
+    /**
+     * Set the DataPrepperConfiguration with defaults
+     */
+    public static void configureWithDefaults() {
+        configuration = DataPrepperConfiguration.DEFAULT_CONFIG;
         configureMeterRegistry();
     }
 
@@ -74,24 +83,26 @@ public class DataPrepper {
      * Meters.
      */
     private static void startMeterRegistryForDataPrepper() {
-        final List<MeterRegistryType> configuredMeterRegistries = configuration.getMetricsRegistries();
-        configuredMeterRegistries.forEach(DataPrepper::createAndAttachMeterRegistry);
+        final List<MetricRegistryType> configuredMetricRegistryTypes = configuration.getMetricRegistryTypes();
+        configuredMetricRegistryTypes.forEach(DataPrepper::createAndAttachMeterRegistry);
     }
 
-    private static void createAndAttachMeterRegistry(final MeterRegistryType meterRegistryType) {
-        switch (meterRegistryType) {
+    private static void createAndAttachMeterRegistry(final MetricRegistryType metricRegistryType) {
+        switch (metricRegistryType) {
             case Prometheus:
                 Metrics.addRegistry(new PrometheusMeterRegistry(PrometheusConfig.DEFAULT));
                 break;
             case CloudWatch:
                 Metrics.addRegistry(new CloudWatchMeterRegistryProvider().getCloudWatchMeterRegistry());
                 break;
+            default:
+                throw new IllegalArgumentException(format("Invalid metricRegistryType %s", metricRegistryType));
         }
     }
 
     private static void configureMeterRegistry() {
-        configuration.getMetricsRegistries().forEach(meterRegistryType ->
-                systemMeterRegistry.add(MeterRegistryType.getDefaultMeterRegistryForType(meterRegistryType)));
+        configuration.getMetricRegistryTypes().forEach(metricRegistryType ->
+                systemMeterRegistry.add(MetricRegistryType.getDefaultMeterRegistryForType(metricRegistryType)));
         new ClassLoaderMetrics().bindTo(systemMeterRegistry);
         new JvmMemoryMetrics().bindTo(systemMeterRegistry);
         new JvmGcMetrics().bindTo(systemMeterRegistry);

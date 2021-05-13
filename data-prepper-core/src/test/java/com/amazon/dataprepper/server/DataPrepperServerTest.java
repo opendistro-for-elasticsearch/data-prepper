@@ -166,6 +166,7 @@ public class DataPrepperServerTest {
         setupDataPrepper();
         try (final MockedStatic<DataPrepper> dataPrepperMockedStatic = Mockito.mockStatic(DataPrepper.class)) {
             dataPrepperMockedStatic.when(DataPrepper::getConfiguration).thenReturn(dataPrepperConfiguration);
+            dataPrepperMockedStatic.when(DataPrepper::getSystemMeterRegistry).thenReturn(compositeMeterRegistry);
             dataPrepperServer = new DataPrepperServer(dataPrepper);
             dataPrepperServer.start();
             HttpRequest request = HttpRequest.newBuilder(new URI("http://127.0.0.1:" + port + "/metrics/sys"))
