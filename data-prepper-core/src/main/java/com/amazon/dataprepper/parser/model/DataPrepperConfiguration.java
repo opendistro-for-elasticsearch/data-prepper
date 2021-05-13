@@ -1,14 +1,14 @@
 package com.amazon.dataprepper.parser.model;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Class to hold configuration for DataPrepper, including server port and Log4j settings
@@ -80,11 +80,6 @@ public class DataPrepperConfiguration {
 
     public List<MetricRegistryType> getMetricRegistryTypes() {
         return metricRegistries;
-    }
-
-    public boolean isMeterRegistryTypeConfigured(final MetricRegistryType metricRegistryType) {
-        return metricRegistries.stream()
-                .anyMatch(configuredMeterRegistryType -> configuredMeterRegistryType.equals(metricRegistryType));
     }
 
     private void setSsl(final Boolean ssl) {

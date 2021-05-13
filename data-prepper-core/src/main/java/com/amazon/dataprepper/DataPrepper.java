@@ -18,7 +18,6 @@ import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +44,7 @@ public class DataPrepper {
 
     /**
      * Set the DataPrepperConfiguration from file
+     *
      * @param configurationFile File containing DataPrepperConfiguration yaml
      */
     public static void configure(final String configurationFile) {
