@@ -72,8 +72,11 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
     try {
       start();
     } catch (final Exception e) {
-      this.shutdown();
-      throw new RuntimeException(e.getMessage(), e);
+      try {
+        throw new RuntimeException(e.getMessage(), e);
+      } finally {
+        this.shutdown();
+      }
     }
   }
 
