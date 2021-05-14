@@ -71,7 +71,7 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
     this.documentIdField = esSinkConfig.getIndexConfiguration().getDocumentIdField();
     try {
       start();
-    } catch (final Exception e) {
+    } catch (final IOException e) {
       try {
         throw new RuntimeException(e.getMessage(), e);
       } finally {
@@ -193,11 +193,11 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
           // Do nothing - likely caused by a race condition where the resource was created
           // by another host before this host's restClient made its request
         } else if (e.getMessage().contains(String.format(INDEX_ALIAS_USED_AS_INDEX_ERROR, indexAlias))) {
-          throw new ElasticsearchException(
+          throw new IOException(
                   String.format("An index exists with the same name as the reserved index alias name [%s], please delete or migrate the existing index",
                           indexAlias));
         } else {
-          throw e;
+          throw new IOException(e);
         }
       }
     }
