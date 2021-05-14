@@ -120,7 +120,7 @@ public class ElasticsearchSinkIT extends ESRestTestCase {
     client().performRequest(request);
     final PluginSetting pluginSetting = generatePluginSetting(true, false, null, null);
     assertThrows(String.format(ElasticsearchSink.INDEX_ALIAS_USED_AS_INDEX_ERROR, reservedIndexAlias),
-            ElasticsearchException.class, () -> new ElasticsearchSink(pluginSetting));
+            RuntimeException.class, () -> new ElasticsearchSink(pluginSetting));
   }
 
   public void testOutputRawSpanDefault() throws IOException, InterruptedException {

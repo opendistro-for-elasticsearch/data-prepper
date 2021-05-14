@@ -71,10 +71,9 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
     this.documentIdField = esSinkConfig.getIndexConfiguration().getDocumentIdField();
     try {
       start();
-    } catch (final IOException e) {
-      throw new RuntimeException(e.getMessage(), e);
-    } finally {
+    } catch (final Exception e) {
       this.shutdown();
+      throw new RuntimeException(e.getMessage(), e);
     }
   }
 
