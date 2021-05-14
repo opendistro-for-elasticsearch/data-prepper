@@ -70,18 +70,15 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
     this.indexType = esSinkConfig.getIndexConfiguration().getIndexType();
     this.documentIdField = esSinkConfig.getIndexConfiguration().getDocumentIdField();
     try {
-      start();
+      initialize();
     } catch (final IOException e) {
-      try {
-        throw new RuntimeException(e.getMessage(), e);
-      } finally {
-        this.shutdown();
-      }
+      this.shutdown();
+      throw new RuntimeException(e.getMessage(), e);
     }
   }
 
-  public void start() throws IOException {
-    LOG.info("Starting Elasticsearch sink");
+  public void initialize() throws IOException {
+    LOG.info("Initializing Elasticsearch sink");
     restHighLevelClient = esSinkConfig.getConnectionConfiguration().createClient();
     final boolean isISMEnabled = IndexStateManagement.checkISMEnabled(restHighLevelClient);
     final Optional<String> policyIdOptional = isISMEnabled? IndexStateManagement.checkAndCreatePolicy(restHighLevelClient, indexType) : Optional.empty();
@@ -99,7 +96,7 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
             this::logFailure,
             pluginMetrics,
             bulkRequestSupplier);
-    LOG.info("Started Elasticsearch sink");
+    LOG.info("Initialized Elasticsearch sink");
   }
 
   @Override
