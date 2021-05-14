@@ -46,6 +46,7 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
   private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchSink.class);
   // Pulled from BulkRequest to make estimation of bytes consistent
   private static final int REQUEST_OVERHEAD = 50;
+  protected static final String INDEX_ALIAS_USED_AS_INDEX_ERROR = "Invalid alias name [%s], an index exists with the same name as the alias";
 
   private BufferedWriter dlqWriter;
   private final ElasticsearchSinkConfiguration esSinkConfig;
@@ -72,6 +73,8 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
       start();
     } catch (final IOException e) {
       throw new RuntimeException(e.getMessage(), e);
+    } finally {
+      this.shutdown();
     }
   }
 
@@ -187,6 +190,10 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
         if (e.getMessage().contains("resource_already_exists_exception")) {
           // Do nothing - likely caused by a race condition where the resource was created
           // by another host before this host's restClient made its request
+        } else if (e.getMessage().contains(String.format(INDEX_ALIAS_USED_AS_INDEX_ERROR, indexAlias))) {
+          throw new ElasticsearchException(
+                  String.format("An index exists with the same name as the reserved index alias name [%s], please delete or migrate the existing index",
+                          indexAlias));
         } else {
           throw e;
         }

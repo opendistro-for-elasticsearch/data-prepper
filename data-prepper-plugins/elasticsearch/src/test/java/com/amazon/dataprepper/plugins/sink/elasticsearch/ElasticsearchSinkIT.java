@@ -17,6 +17,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
@@ -111,6 +112,15 @@ public class ElasticsearchSinkIT extends ESRestTestCase {
       // Check managed index
       assertEquals(IndexConstants.RAW_ISM_POLICY, getIndexPolicyId(rolloverIndexName));
     }
+  }
+
+  public void testInstantiateSinkRawSpanReservedAliasAlreadyUsedAsIndex() throws IOException {
+    final String reservedIndexAlias = IndexConstants.TYPE_TO_DEFAULT_ALIAS.get(IndexConstants.RAW);
+    final Request request = new Request(HttpMethod.PUT, reservedIndexAlias);
+    client().performRequest(request);
+    final PluginSetting pluginSetting = generatePluginSetting(true, false, null, null);
+    assertThrows(String.format(ElasticsearchSink.INDEX_ALIAS_USED_AS_INDEX_ERROR, reservedIndexAlias),
+            ElasticsearchException.class, () -> new ElasticsearchSink(pluginSetting));
   }
 
   public void testOutputRawSpanDefault() throws IOException, InterruptedException {
