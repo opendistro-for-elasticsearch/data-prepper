@@ -59,6 +59,7 @@ public class OTelTraceSource implements Source<Record<ExportTraceServiceRequest>
                 LOG.info("Proto reflection service is enabled");
                 grpcServiceBuilder.addService(ProtoReflectionService.newInstance());
             }
+            grpcServiceBuilder.enableUnframedRequests(oTelTraceSourceConfig.enableUnframedRequests());
 
             final ServerBuilder sb = Server.builder();
             sb.service(grpcServiceBuilder.build());
