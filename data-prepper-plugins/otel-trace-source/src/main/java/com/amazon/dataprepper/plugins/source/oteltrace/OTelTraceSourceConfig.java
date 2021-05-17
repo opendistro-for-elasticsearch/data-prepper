@@ -12,7 +12,7 @@ public class OTelTraceSourceConfig {
     static final String SSL_KEY_FILE = "sslKeyFile";
     static final String THREAD_COUNT = "thread_count";
     static final String MAX_CONNECTION_COUNT = "max_connection_count";
-    static final String ENABLE_UNFRAMED_REQUESTS = "unframed-requests";
+    static final String ENABLE_UNFRAMED_REQUESTS = "unframed_requests";
     static final int DEFAULT_REQUEST_TIMEOUT_MS = 10000;
     static final int DEFAULT_PORT = 21890;
     static final int DEFAULT_THREAD_COUNT = 200;
