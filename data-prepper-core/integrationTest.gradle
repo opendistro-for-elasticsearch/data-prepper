@@ -52,6 +52,7 @@ task removeDataPrepperNetwork(type: DockerRemoveNetwork) {
 }
 
 def RAW_SPAN_PIPELINE_YAML = "raw-span-e2e-pipeline.yml"
+def RAW_SPAN_PIPELINE_NO_TRACE_GROUP_YAML = "raw-span-e2e-pipeline-no-trace-group.yml"
 def SERVICE_MAP_PIPELINE_YAML = "service-map-e2e-pipeline.yml"
 
 /**
@@ -115,16 +116,15 @@ task pullDataPrepperDockerImage(type: DockerPullImage) {
 }
 
 def createDataPrepperDockerContainerFromPullImage(final String taskBaseName, final String dataPrepperName, final int grpcPort,
-                                                  final int serverPort, final String pipelineConfigYAML, final String serverConfigYAML) {
+                                                  final int serverPort, final String pipelineConfigYAML) {
     return tasks.create("create${taskBaseName}", DockerCreateContainer) {
         dependsOn createDataPrepperNetwork
         dependsOn pullDataPrepperDockerImage
         containerName = dataPrepperName
         hostConfig.portBindings = [String.format('%d:21890', grpcPort), String.format('%d:4900', serverPort)]
         hostConfig.network = createDataPrepperNetwork.getNetworkName()
-        volumes = [
-                String.format("%s:/usr/share/data-prepper/pipelines.yaml", project.file(pipelineConfigYAML)),
-                String.format("%s:/usr/share/data-prepper/data-prepper-config.yaml", project.file(serverConfigYAML))]
+        hostConfig.binds = [(project.file(pipelineConfigYAML).toString()):"/usr/share/data-prepper/pipelines.yaml",
+                            (project.file("src/integrationTest/resources/data_prepper.yml").toString()):"/usr/share/data-prepper/data-prepper-config.yaml"]
         targetImageId pullDataPrepperDockerImage.image
     }
 }
@@ -188,7 +188,7 @@ task rawSpanEndToEndTest(type: Test) {
     classpath = sourceSets.integrationTest.runtimeClasspath
 
     filter {
-        includeTestsMatching "com.amazon.dataprepper.integration.EndToEndRawSpanTest*"
+        includeTestsMatching "com.amazon.dataprepper.integration.EndToEndRawSpanTest.testPipelineEndToEnd*"
     }
 
     finalizedBy stopOdfeDockerContainer
@@ -207,8 +207,7 @@ task rawSpanCompatibilityEndToEndTest(type: Test) {
     def createDataPrepper1Task = createDataPrepperDockerContainer(
             "rawSpanDataPrepperFromBuild", "data-prepper1", 21890, 4900, "/app/${RAW_SPAN_PIPELINE_YAML}")
     def createDataPrepper2Task = createDataPrepperDockerContainerFromPullImage(
-            "rawSpanDataPrepperFromPull", "data-prepper2", 21891, 4901, "src/integrationTest/resources/${RAW_SPAN_PIPELINE_YAML}",
-            "src/integrationTest/resources/data_prepper.yml")
+            "rawSpanDataPrepperFromPull", "data-prepper2", 21891, 4901, "src/integrationTest/resources/${RAW_SPAN_PIPELINE_NO_TRACE_GROUP_YAML}")
     def startDataPrepper1Task = startDataPrepperDockerContainer(createDataPrepper1Task as DockerCreateContainer)
     def startDataPrepper2Task = startDataPrepperDockerContainer(createDataPrepper2Task as DockerCreateContainer)
     dependsOn startDataPrepper1Task
@@ -220,13 +219,13 @@ task rawSpanCompatibilityEndToEndTest(type: Test) {
         sleep(10*1000)
     }
 
-    description = 'Runs the raw span integration tests.'
+    description = 'Runs the raw span compatibility integration tests.'
     group = 'verification'
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
 
     filter {
-        includeTestsMatching "com.amazon.dataprepper.integration.EndToEndRawSpanTest*"
+        includeTestsMatching "com.amazon.dataprepper.integration.EndToEndRawSpanTest.testPipelineCompatibilityEndToEnd*"
     }
 
     finalizedBy stopOdfeDockerContainer

@@ -45,6 +45,8 @@ public class EndToEndRawSpanTest {
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
     private static final int DATA_PREPPER_PORT_1 = 21890;
     private static final int DATA_PREPPER_PORT_2 = 21891;
+    private static final int DATA_PREPPER_MAIN_PORT = 21890;
+    private static final int DATA_PREPPER_LATEST_PORT = 21891;
 
     private static final Map<String, TraceGroup> TEST_TRACEID_TO_TRACE_GROUP = new HashMap<String, TraceGroup>() {{
        put(Hex.toHexString(EndToEndTestSpan.TRACE_1_ROOT_SPAN.traceId.getBytes()),
@@ -95,6 +97,66 @@ public class EndToEndRawSpanTest {
         sendExportTraceServiceRequestToSource(DATA_PREPPER_PORT_1, exportTraceServiceRequestTrace2BatchNoRoot);
         sendExportTraceServiceRequestToSource(DATA_PREPPER_PORT_2, exportTraceServiceRequestTrace2BatchWithRoot);
         sendExportTraceServiceRequestToSource(DATA_PREPPER_PORT_2, exportTraceServiceRequestTrace1BatchNoRoot);
+
+        //Verify data in elasticsearch sink
+        final List<Map<String, Object>> expectedDocuments = getExpectedDocuments(
+                exportTraceServiceRequestTrace1BatchWithRoot, exportTraceServiceRequestTrace1BatchNoRoot,
+                exportTraceServiceRequestTrace2BatchWithRoot, exportTraceServiceRequestTrace2BatchNoRoot);
+        final ConnectionConfiguration.Builder builder = new ConnectionConfiguration.Builder(
+                Collections.singletonList("https://127.0.0.1:9200"));
+        builder.withUsername("admin");
+        builder.withPassword("admin");
+        final RestHighLevelClient restHighLevelClient = builder.build().createClient();
+        // Wait for otel-trace-raw-prepper by at least trace_flush_interval
+        Thread.sleep(6000);
+        // Wait for data to flow through pipeline and be indexed by ES
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted(
+                () -> {
+                    refreshIndices(restHighLevelClient);
+                    final SearchRequest searchRequest = new SearchRequest(INDEX_NAME);
+                    searchRequest.source(
+                            SearchSourceBuilder.searchSource().size(100)
+                    );
+                    final SearchResponse searchResponse = restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+                    final List<Map<String, Object>> foundSources = getSourcesFromSearchHits(searchResponse.getHits());
+                    Assert.assertEquals(expectedDocuments.size(), foundSources.size());
+                    /**
+                     * Our raw trace prepper add more fields than the actual sent object. These are defaults from the proto.
+                     * So assertion is done if all the expected fields exists.
+                     *
+                     * TODO: Can we do better?
+                     *
+                     */
+                    expectedDocuments.forEach(expectedDoc -> {
+                        Assert.assertTrue(foundSources.stream()
+                                .filter(i -> i.get("spanId").equals(expectedDoc.get("spanId")))
+                                .findFirst().get()
+                                .entrySet().containsAll(expectedDoc.entrySet()));
+                    });
+                }
+        );
+    }
+
+    @Test
+    public void testPipelineCompatibilityEndToEnd() throws InterruptedException {
+        //Send data to otel trace source
+        final ExportTraceServiceRequest exportTraceServiceRequestTrace1BatchWithRoot = getExportTraceServiceRequest(
+                getResourceSpansBatch(TEST_SPAN_SET_1_WITH_ROOT_SPAN)
+        );
+        final ExportTraceServiceRequest exportTraceServiceRequestTrace1BatchNoRoot = getExportTraceServiceRequest(
+                getResourceSpansBatch(TEST_SPAN_SET_1_WITHOUT_ROOT_SPAN)
+        );
+        final ExportTraceServiceRequest exportTraceServiceRequestTrace2BatchWithRoot = getExportTraceServiceRequest(
+                getResourceSpansBatch(TEST_SPAN_SET_2_WITH_ROOT_SPAN)
+        );
+        final ExportTraceServiceRequest exportTraceServiceRequestTrace2BatchNoRoot = getExportTraceServiceRequest(
+                getResourceSpansBatch(TEST_SPAN_SET_2_WITHOUT_ROOT_SPAN)
+        );
+
+        sendExportTraceServiceRequestToSource(DATA_PREPPER_MAIN_PORT, exportTraceServiceRequestTrace1BatchWithRoot);
+        sendExportTraceServiceRequestToSource(DATA_PREPPER_MAIN_PORT, exportTraceServiceRequestTrace2BatchNoRoot);
+        sendExportTraceServiceRequestToSource(DATA_PREPPER_MAIN_PORT, exportTraceServiceRequestTrace1BatchNoRoot);
+        sendExportTraceServiceRequestToSource(DATA_PREPPER_LATEST_PORT, exportTraceServiceRequestTrace2BatchWithRoot);
 
         //Verify data in elasticsearch sink
         final List<Map<String, Object>> expectedDocuments = getExpectedDocuments(
