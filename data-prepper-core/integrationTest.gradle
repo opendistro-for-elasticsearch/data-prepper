@@ -67,6 +67,7 @@ task createDataPrepperDockerFile(type: Dockerfile) {
     workingDir("/app")
     copyFile("build/libs/${jar.archiveName}", "/app/data-prepper.jar")
     copyFile("src/integrationTest/resources/${RAW_SPAN_PIPELINE_YAML}", "/app/${RAW_SPAN_PIPELINE_YAML}")
+    copyFile("src/integrationTest/resources/${RAW_SPAN_PIPELINE_LATEST_RELEASE_YAML}", "/app/${RAW_SPAN_PIPELINE_LATEST_RELEASE_YAML}")
     copyFile("src/integrationTest/resources/${SERVICE_MAP_PIPELINE_YAML}", "/app/${SERVICE_MAP_PIPELINE_YAML}")
     copyFile("src/integrationTest/resources/data_prepper.yml", "/app/data_prepper.yml")
     defaultCommand("java", "-jar", "data-prepper.jar", "/app/${RAW_SPAN_PIPELINE_YAML}", "/app/data_prepper.yml")
@@ -206,7 +207,7 @@ task rawSpanCompatibilityEndToEndTest(type: Test) {
     dependsOn build
     dependsOn startOdfeDockerContainer
     def createDataPrepper1Task = createDataPrepperDockerContainer(
-            "rawSpanDataPrepperFromBuild", "data-prepper1", 21890, 4900, "/app/${RAW_SPAN_PIPELINE_YAML}")
+            "rawSpanDataPrepperFromBuild", "data-prepper1", 21890, 4900, "/app/${RAW_SPAN_PIPELINE_LATEST_RELEASE_YAML}")
     def createDataPrepper2Task = createDataPrepperDockerContainerFromPullImage(
             "rawSpanDataPrepperFromPull", "data-prepper2", 21891, 4901, "src/integrationTest/resources/${RAW_SPAN_PIPELINE_LATEST_RELEASE_YAML}")
     def startDataPrepper1Task = startDataPrepperDockerContainer(createDataPrepper1Task as DockerCreateContainer)
