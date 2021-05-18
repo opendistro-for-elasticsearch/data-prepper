@@ -45,8 +45,8 @@ public class EndToEndRawSpanTest {
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
     private static final int DATA_PREPPER_PORT_1 = 21890;
     private static final int DATA_PREPPER_PORT_2 = 21891;
-    private static final int DATA_PREPPER_MAIN_PORT = 21890;
-    private static final int DATA_PREPPER_LATEST_PORT = 21891;
+    private static final int DATA_PREPPER_FROM_BUILD_PORT = 21890;
+    private static final int DATA_PREPPER_LATEST_IMAGE_PORT = 21891;
 
     private static final Map<String, TraceGroup> TEST_TRACEID_TO_TRACE_GROUP = new HashMap<String, TraceGroup>() {{
        put(Hex.toHexString(EndToEndTestSpan.TRACE_1_ROOT_SPAN.traceId.getBytes()),
@@ -153,10 +153,10 @@ public class EndToEndRawSpanTest {
                 getResourceSpansBatch(TEST_SPAN_SET_2_WITHOUT_ROOT_SPAN)
         );
 
-        sendExportTraceServiceRequestToSource(DATA_PREPPER_MAIN_PORT, exportTraceServiceRequestTrace1BatchWithRoot);
-        sendExportTraceServiceRequestToSource(DATA_PREPPER_MAIN_PORT, exportTraceServiceRequestTrace2BatchNoRoot);
-        sendExportTraceServiceRequestToSource(DATA_PREPPER_MAIN_PORT, exportTraceServiceRequestTrace1BatchNoRoot);
-        sendExportTraceServiceRequestToSource(DATA_PREPPER_LATEST_PORT, exportTraceServiceRequestTrace2BatchWithRoot);
+        sendExportTraceServiceRequestToSource(DATA_PREPPER_FROM_BUILD_PORT, exportTraceServiceRequestTrace1BatchWithRoot);
+        sendExportTraceServiceRequestToSource(DATA_PREPPER_FROM_BUILD_PORT, exportTraceServiceRequestTrace2BatchNoRoot);
+        sendExportTraceServiceRequestToSource(DATA_PREPPER_FROM_BUILD_PORT, exportTraceServiceRequestTrace1BatchNoRoot);
+        sendExportTraceServiceRequestToSource(DATA_PREPPER_LATEST_IMAGE_PORT, exportTraceServiceRequestTrace2BatchWithRoot);
 
         //Verify data in elasticsearch sink
         final List<Map<String, Object>> expectedDocuments = getExpectedDocuments(
