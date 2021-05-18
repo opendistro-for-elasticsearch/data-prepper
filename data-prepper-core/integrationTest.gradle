@@ -122,6 +122,7 @@ def createDataPrepperDockerContainerFromPullImage(final String taskBaseName, fin
         dependsOn pullDataPrepperDockerImage
         containerName = dataPrepperName
         hostConfig.portBindings = [String.format('%d:21890', grpcPort), String.format('%d:4900', serverPort)]
+        exposePorts('tcp', [21890, 4900])
         hostConfig.network = createDataPrepperNetwork.getNetworkName()
         hostConfig.binds = [(project.file(pipelineConfigYAML).toString()):"/usr/share/data-prepper/pipelines.yaml",
                             (project.file("src/integrationTest/resources/data_prepper.yml").toString()):"/usr/share/data-prepper/data-prepper-config.yaml"]
