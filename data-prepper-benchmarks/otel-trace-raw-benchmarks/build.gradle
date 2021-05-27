@@ -24,9 +24,9 @@ task jmh(type: JavaExec, dependsOn: jmhClasses) {
 
     args '-r', 300
     args '-w', 300
-    args '-t', 16
-    args '-jvmArgsPrepend', '-Xmx5g'
-    args '-jvmArgsPrepend', '-Xms5g'
+    args '-t', 4
+    args '-jvmArgsPrepend', '-Xmx8g'
+    args '-jvmArgsPrepend', '-Xms8g'
 }
 
 shadowJar {

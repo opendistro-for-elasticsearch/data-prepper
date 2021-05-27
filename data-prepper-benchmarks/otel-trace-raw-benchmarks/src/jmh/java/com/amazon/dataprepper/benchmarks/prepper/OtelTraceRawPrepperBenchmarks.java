@@ -14,6 +14,7 @@ import io.opentelemetry.proto.trace.v1.Span;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.OperationsPerInvocation;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -33,11 +34,13 @@ import java.util.Random;
 
 public class OtelTraceRawPrepperBenchmarks {
 
+    private static final int OPERATIONS_PER_INVOCATION = 10;
+
     @State(Scope.Benchmark)
     public static class OtelTraceRawPrepperState {
         private OTelTraceRawPrepper otelTraceRawPrepper;
 
-        @Param(value = "16")
+        @Param(value = "4")
         private int concurrencyScale;
 
         @Setup(Level.Trial)
@@ -57,16 +60,16 @@ public class OtelTraceRawPrepperBenchmarks {
 
     @State(Scope.Thread)
     public static class TestDataState {
-        private List<byte[]> traceIds;
-        private Map<byte[], byte[]> traceIdToRootSpanId;
-        private Map<byte[], List<byte[]>> traceIdToSpanIds;
+        private List<byte[]> traceIds = new ArrayList<>();
+        private Map<byte[], byte[]> traceIdToRootSpanId = new HashMap<>();
+        private Map<byte[], List<byte[]>> traceIdToSpanIds = new HashMap<>();
         private static final Random RANDOM = new Random();
         private static final List<String> serviceNames = Arrays.asList("FRONTEND", "BACKEND", "PAYMENT", "CHECKOUT", "DATABASE");
         private static final List<String> traceGroups = Arrays.asList("tg1", "tg2", "tg3", "tg4", "tg5", "tg6", "tg7", "tg8", "tg9");
-        private List<Record<ExportTraceServiceRequest>> batch;
+        private List<Record<ExportTraceServiceRequest>> bulk;
 
-        @Param(value = "100")
-        private int batchSize;
+        @Param(value = "10")
+        protected int batchSize;
 
         /**
          * Gets a new trace id. 10% of the time it will generate a new id, and otherwise will pick a random
@@ -109,7 +112,7 @@ public class OtelTraceRawPrepperBenchmarks {
             }
         }
 
-        @Setup(Level.Iteration)
+        @Setup(Level.Invocation)
         public void resetTraceSpanIdCaches() {
             traceIdToRootSpanId = new HashMap<>();
             traceIdToSpanIds = new HashMap<>();
@@ -118,12 +121,12 @@ public class OtelTraceRawPrepperBenchmarks {
 
         @Setup(Level.Invocation)
         public void generateBatch() {
-            batch = new ArrayList<>();
-            for(int j=0; j<batchSize; j++) {
+            bulk = new ArrayList<>();
+            for(int j=0; j<batchSize*OPERATIONS_PER_INVOCATION; j++) {
                 final byte[] traceId = getTraceId();
                 final byte[] spanId = getSpanId(traceId);
                 final byte[] parentId = getParentId(traceId, spanId);
-                batch.add(new Record<>(getExportTraceServiceRequest(
+                bulk.add(new Record<>(getExportTraceServiceRequest(
                         getResourceSpans(
                                 serviceNames.get(RANDOM.nextInt(serviceNames.size())),
                                 traceGroups.get(RANDOM.nextInt(traceGroups.size())),
@@ -134,7 +137,7 @@ public class OtelTraceRawPrepperBenchmarks {
                         ))));
             }
 
-            Collections.shuffle(batch);
+            Collections.shuffle(bulk);
         }
 
         private static byte[] getRandomBytes(int len) {
@@ -181,7 +184,10 @@ public class OtelTraceRawPrepperBenchmarks {
     @Benchmark
     @Fork(value = 1)
     @Warmup(iterations = 2)
+    @OperationsPerInvocation(value = OPERATIONS_PER_INVOCATION)
     public void benchmarkExecute(OtelTraceRawPrepperState otelTraceRawPrepperState, TestDataState testDataState) {
-        otelTraceRawPrepperState.otelTraceRawPrepper.execute(testDataState.batch);
+        for (int i = 0; i < OPERATIONS_PER_INVOCATION; i++) {
+            otelTraceRawPrepperState.otelTraceRawPrepper.execute(testDataState.bulk.subList(i*testDataState.batchSize, (i+1)*testDataState.batchSize));
+        }
     }
 }
