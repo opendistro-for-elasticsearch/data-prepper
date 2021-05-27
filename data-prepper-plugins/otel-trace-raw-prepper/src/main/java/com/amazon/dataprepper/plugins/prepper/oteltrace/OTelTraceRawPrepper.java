@@ -9,8 +9,12 @@ import com.amazon.dataprepper.plugins.prepper.oteltrace.model.OTelProtoHelper;
 import com.amazon.dataprepper.plugins.prepper.oteltrace.model.RawSpan;
 import com.amazon.dataprepper.plugins.prepper.oteltrace.model.RawSpanBuilder;
 import com.amazon.dataprepper.plugins.prepper.oteltrace.model.RawSpanSet;
+import com.amazon.dataprepper.plugins.prepper.oteltrace.model.TraceGroup;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import io.micrometer.core.instrument.Counter;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
@@ -38,7 +42,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class OTelTraceRawPrepper extends AbstractPrepper<Record<ExportTraceServiceRequest>, Record<String>> {
 
     private static final long SEC_TO_MILLIS = 1_000L;
-    private static final Logger log = LoggerFactory.getLogger(OTelTraceRawPrepper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OTelTraceRawPrepper.class);
 
     public static final String SPAN_PROCESSING_ERRORS = "spanProcessingErrors";
     public static final String RESOURCE_SPANS_PROCESSING_ERRORS = "resourceSpansProcessingErrors";
@@ -58,19 +62,28 @@ public class OTelTraceRawPrepper extends AbstractPrepper<Record<ExportTraceServi
     // TODO: introduce a gauge to monitor the size
     private final Map<String, RawSpanSet> traceIdRawSpanSetMap = new ConcurrentHashMap<>();
 
+    private final Cache<String, TraceGroup> traceIdTraceGroupCache;
+
     private long lastTraceFlushTime = 0L;
 
     private final ReentrantLock traceFlushLock = new ReentrantLock();
+    private final ReentrantLock prepareForShutdownLock = new ReentrantLock();
 
     //TODO: https://github.com/opendistro-for-elasticsearch/simple-ingest-transformation-utility-pipeline/issues/66
     public OTelTraceRawPrepper(final PluginSetting pluginSetting) {
         super(pluginSetting);
         traceFlushInterval = SEC_TO_MILLIS * pluginSetting.getLongOrDefault(
-                OtelTraceRawPrepperConfig.TRACE_FLUSH_INTERVAL, OtelTraceRawPrepperConfig.DEFAULT_TG_FLUSH_INTERVAL);
+                OtelTraceRawPrepperConfig.TRACE_FLUSH_INTERVAL, OtelTraceRawPrepperConfig.DEFAULT_TG_FLUSH_INTERVAL_SEC);
         rootSpanFlushDelay = SEC_TO_MILLIS * pluginSetting.getLongOrDefault(
-                OtelTraceRawPrepperConfig.ROOT_SPAN_FLUSH_DELAY, OtelTraceRawPrepperConfig.DEFAULT_ROOT_SPAN_FLUSH_DELAY);
+                OtelTraceRawPrepperConfig.ROOT_SPAN_FLUSH_DELAY, OtelTraceRawPrepperConfig.DEFAULT_ROOT_SPAN_FLUSH_DELAY_SEC);
         Preconditions.checkArgument(rootSpanFlushDelay <= traceFlushInterval,
                 "rootSpanSetFlushDelay should not be greater than traceFlushInterval.");
+        final int numProcessWorkers = pluginSetting.getNumberOfProcessWorkers();
+        traceIdTraceGroupCache = CacheBuilder.newBuilder()
+                .concurrencyLevel(numProcessWorkers)
+                .maximumSize(OtelTraceRawPrepperConfig.MAX_TRACE_ID_CACHE_SIZE)
+                .expireAfterWrite(OtelTraceRawPrepperConfig.DEFAULT_TRACE_ID_TTL_SEC, TimeUnit.SECONDS)
+                .build();
         spanErrorsCounter = pluginMetrics.counter(SPAN_PROCESSING_ERRORS);
         resourceSpanErrorsCounter = pluginMetrics.counter(RESOURCE_SPANS_PROCESSING_ERRORS);
         totalProcessingErrorsCounter = pluginMetrics.counter(TOTAL_PROCESSING_ERRORS);
@@ -99,7 +112,7 @@ public class OTelTraceRawPrepper extends AbstractPrepper<Record<ExportTraceServi
                         }
                     }
                 } catch (Exception ex) {
-                    log.error("Unable to process invalid ResourceSpan {} :", rs, ex);
+                    LOG.error("Unable to process invalid ResourceSpan {} :", rs, ex);
                     resourceSpanErrorsCounter.increment();
                     totalProcessingErrorsCounter.increment();
                 }
@@ -122,6 +135,9 @@ public class OTelTraceRawPrepper extends AbstractPrepper<Record<ExportTraceServi
     }
 
     private void processRootRawSpan(final RawSpan rawSpan) {
+        // TODO: flush descendants here to get rid of DelayQueue
+        // TODO: safe-guard against null traceGroup for rootSpan?
+        traceIdTraceGroupCache.put(rawSpan.getTraceId(), rawSpan.getTraceGroup());
         final long now = System.currentTimeMillis();
         final long nowPlusOffset = now + rootSpanFlushDelay;
         final DelayedParentSpan delayedParentSpan = new DelayedParentSpan(rawSpan, nowPlusOffset);
@@ -146,7 +162,7 @@ public class OTelTraceRawPrepper extends AbstractPrepper<Record<ExportTraceServi
             try {
                 rawSpanJson = rawSpan.toJson();
             } catch (JsonProcessingException e) {
-                log.error("Unable to process invalid Span {}:", rawSpan, e);
+                LOG.error("Unable to process invalid Span {}:", rawSpan, e);
                 spanErrorsCounter.increment();
                 totalProcessingErrorsCounter.increment();
                 continue;
@@ -165,7 +181,7 @@ public class OTelTraceRawPrepper extends AbstractPrepper<Record<ExportTraceServi
             RawSpan parentSpan = delayedParentSpan.getRawSpan();
             recordsToFlush.add(parentSpan);
 
-            String traceGroup = parentSpan.getTraceGroup();
+            TraceGroup traceGroup = parentSpan.getTraceGroup();
             String parentSpanTraceId = parentSpan.getTraceId();
 
             RawSpanSet rawSpanSet = traceIdRawSpanSetMap.get(parentSpanTraceId);
@@ -197,20 +213,29 @@ public class OTelTraceRawPrepper extends AbstractPrepper<Record<ExportTraceServi
                     Iterator<Map.Entry<String, RawSpanSet>> entryIterator = traceIdRawSpanSetMap.entrySet().iterator();
                     while (entryIterator.hasNext()) {
                         Map.Entry<String, RawSpanSet> entry = entryIterator.next();
+                        String traceId = entry.getKey();
+                        TraceGroup traceGroup = traceIdTraceGroupCache.getIfPresent(traceId);
                         RawSpanSet rawSpanSet = entry.getValue();
                         long traceTime = rawSpanSet.getTimeSeen();
                         if (now - traceTime >= traceFlushInterval) {
                             Set<RawSpan> rawSpans = rawSpanSet.getRawSpans();
-                            for (RawSpan rawSpan : rawSpans) {
-                                recordsToFlush.add(rawSpan);
-                                log.warn("Missing root span for SpanId: {}", rawSpan.getSpanId());
+                            if (traceGroup != null) {
+                                rawSpans.forEach(rawSpan -> {
+                                    rawSpan.setTraceGroup(traceGroup);
+                                    recordsToFlush.add(rawSpan);
+                                });
+                            } else {
+                                rawSpans.forEach(rawSpan -> {
+                                    recordsToFlush.add(rawSpan);
+                                    LOG.warn("Missing trace group for SpanId: {}", rawSpan.getSpanId());
+                                });
                             }
 
                             entryIterator.remove();
                         }
                     }
                     if (recordsToFlush.size() > 0) {
-                        log.info("Flushing {} records due to GC", recordsToFlush.size());
+                        LOG.info("Flushing {} records due to GC", recordsToFlush.size());
                     }
                 } finally {
                     traceFlushLock.unlock();
@@ -225,9 +250,40 @@ public class OTelTraceRawPrepper extends AbstractPrepper<Record<ExportTraceServi
         return System.currentTimeMillis() - lastTraceFlushTime >= traceFlushInterval;
     }
 
+    /**
+     * Re-enqueues all spans with time "0" so that all will be available for consumption.
+     */
+    @Override
+    public void prepareForShutdown() {
+        boolean isLockAcquired = prepareForShutdownLock.tryLock();
+
+        if (isLockAcquired) {
+            try {
+                LOG.info("Preparing for shutdown, re-enqueueing {} spans", delayedParentSpanQueue.size());
+                Iterator iterator = delayedParentSpanQueue.iterator();
+                List<DelayedParentSpan> delayedParentSpanList = ImmutableList.copyOf(iterator);
+
+                delayedParentSpanQueue.clear();
+
+                for (final DelayedParentSpan delayedParentSpan : delayedParentSpanList) {
+                    final DelayedParentSpan newSpan = new DelayedParentSpan(delayedParentSpan.getRawSpan(), 0L);
+                    delayedParentSpanQueue.add(newSpan);
+                }
+            } finally {
+                prepareForShutdownLock.unlock();
+            }
+        }
+    }
+
+    @Override
+    public boolean isReadyForShutdown() {
+        return delayedParentSpanQueue.isEmpty()
+                && traceIdRawSpanSetMap.isEmpty();
+    }
+
     @Override
     public void shutdown() {
-
+        traceIdTraceGroupCache.cleanUp();
     }
 
     class DelayedParentSpan implements Delayed {

@@ -27,17 +27,17 @@ updates:
     interval: weekly
 
 - package-ecosystem: gradle
-  directory: "/data-prepper-plugins/lmdb-prepper-state"
-  schedule:
-    interval: weekly
-
-- package-ecosystem: gradle
   directory: "/data-prepper-plugins/mapdb-prepper-state"
   schedule:
     interval: weekly
 
 - package-ecosystem: gradle
   directory: "/data-prepper-plugins/otel-trace-raw-prepper"
+  schedule:
+    interval: weekly
+
+- package-ecosystem: gradle
+  directory: "/data-prepper-plugins/otel-trace-group-prepper"
   schedule:
     interval: weekly
 

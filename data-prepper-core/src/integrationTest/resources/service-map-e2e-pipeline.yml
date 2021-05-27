@@ -1,0 +1,25 @@
+entry-pipeline:
+  source:
+    otel_trace_source:
+      ssl: false
+  prepper:
+    - peer_forwarder:
+        discovery_mode: "static"
+        static_endpoints: ["data-prepper1", "data-prepper2"]
+        ssl: false
+  sink:
+    - pipeline:
+        name: "service-map-pipeline"
+service-map-pipeline:
+  source:
+    pipeline:
+      name: "entry-pipeline"
+  prepper:
+    - service_map_stateful:
+        window_duration: 3
+  sink:
+    - elasticsearch:
+        hosts: ["https://node-0.example.com:9200"]
+        username: "admin"
+        password: "admin"
+        trace_analytics_service_map: true

@@ -17,6 +17,10 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
+import org.elasticsearch.client.indices.GetIndexTemplatesResponse;
+import org.elasticsearch.client.indices.IndexTemplateMetadata;
+import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.xcontent.LoggingDeprecationHandler;
@@ -35,6 +39,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 @DataPrepperPlugin(name = "elasticsearch", type = PluginType.SINK)
@@ -45,6 +50,7 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
   private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchSink.class);
   // Pulled from BulkRequest to make estimation of bytes consistent
   private static final int REQUEST_OVERHEAD = 50;
+  protected static final String INDEX_ALIAS_USED_AS_INDEX_ERROR = "Invalid alias name [%s], an index exists with the same name as the alias";
 
   private BufferedWriter dlqWriter;
   private final ElasticsearchSinkConfiguration esSinkConfig;
@@ -68,21 +74,24 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
     this.indexType = esSinkConfig.getIndexConfiguration().getIndexType();
     this.documentIdField = esSinkConfig.getIndexConfiguration().getDocumentIdField();
     try {
-      start();
+      initialize();
     } catch (final IOException e) {
+      this.shutdown();
       throw new RuntimeException(e.getMessage(), e);
     }
   }
 
-  public void start() throws IOException {
-    LOG.info("Starting Elasticsearch sink");
+  public void initialize() throws IOException {
+    LOG.info("Initializing Elasticsearch sink");
     restHighLevelClient = esSinkConfig.getConnectionConfiguration().createClient();
-    final String ismPolicyId = IndexStateManagement.checkAndCreatePolicy(restHighLevelClient, indexType);
+    final boolean isISMEnabled = IndexStateManagement.checkISMEnabled(restHighLevelClient);
+    final Optional<String> policyIdOptional = isISMEnabled ? IndexStateManagement.checkAndCreatePolicy(restHighLevelClient, indexType) :
+            Optional.empty();
     if (!esSinkConfig.getIndexConfiguration().getIndexTemplate().isEmpty()) {
-      createIndexTemplate(ismPolicyId);
+      checkAndCreateIndexTemplate(isISMEnabled, policyIdOptional.orElse(null));
     }
     final String dlqFile = esSinkConfig.getRetryConfiguration().getDlqFile();
-    if ( dlqFile != null) {
+    if (dlqFile != null) {
       dlqWriter = Files.newBufferedWriter(Paths.get(dlqFile), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
     checkAndCreateIndex();
@@ -92,7 +101,7 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
             this::logFailure,
             pluginMetrics,
             bulkRequestSupplier);
-    LOG.info("Started Elasticsearch sink");
+    LOG.info("Initialized Elasticsearch sink");
   }
 
   @Override
@@ -101,7 +110,7 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
       return;
     }
     BulkRequest bulkRequest = bulkRequestSupplier.get();
-    for (final Record<String> record: records) {
+    for (final Record<String> record : records) {
       final String document = record.getData();
       final IndexRequest indexRequest = new IndexRequest().source(document, XContentType.JSON);
       try {
@@ -144,28 +153,84 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
     });
   }
 
-  private void createIndexTemplate(final String ismPolicyId) throws IOException {
+  private void checkAndCreateIndexTemplate(final boolean isISMEnabled, final String ismPolicyId) throws IOException {
     final String indexAlias = esSinkConfig.getIndexConfiguration().getIndexAlias();
-    final PutIndexTemplateRequest putIndexTemplateRequest = new PutIndexTemplateRequest(indexAlias + "-index-template");
+    final String indexTemplateName = indexAlias + "-index-template";
+
+    // Check existing index template version - only overwrite if version is less than or does not exist
+    if (!shouldCreateIndexTemplate(indexTemplateName)) {
+      return;
+    }
+
+    final PutIndexTemplateRequest putIndexTemplateRequest = new PutIndexTemplateRequest(indexTemplateName);
     final boolean isRaw = indexType.equals(IndexConstants.RAW);
     if (isRaw) {
       putIndexTemplateRequest.patterns(Collections.singletonList(indexAlias + "-*"));
     } else {
       putIndexTemplateRequest.patterns(Collections.singletonList(indexAlias));
     }
-    if (ismPolicyId != null) {
+    if (isISMEnabled) {
       IndexStateManagement.attachPolicy(esSinkConfig.getIndexConfiguration(), ismPolicyId, indexAlias);
     }
+
     putIndexTemplateRequest.source(esSinkConfig.getIndexConfiguration().getIndexTemplate());
     restHighLevelClient.indices().putTemplate(putIndexTemplateRequest, RequestOptions.DEFAULT);
+  }
+
+  // TODO: Unit tests for this (and for the rest of the class)
+  private boolean shouldCreateIndexTemplate(final String indexTemplateName) throws IOException {
+    final Optional<IndexTemplateMetadata> indexTemplateMetadataOptional = getIndexTemplateMetadata(indexTemplateName);
+    if (indexTemplateMetadataOptional.isPresent()) {
+      final Integer existingTemplateVersion = indexTemplateMetadataOptional.get().version();
+      LOG.info("Found version {} for existing index template {}", existingTemplateVersion, indexTemplateName);
+
+      final int newTemplateVersion = (int) esSinkConfig.getIndexConfiguration().getIndexTemplate().getOrDefault("version", 0);
+
+      if (existingTemplateVersion != null && existingTemplateVersion >= newTemplateVersion) {
+        LOG.info("Index template {} should not be updated, current version {} >= existing version {}",
+                indexTemplateName,
+                existingTemplateVersion,
+                newTemplateVersion);
+        return false;
+
+      } else {
+        LOG.info("Index template {} should be updated from version {} to version {}",
+                indexTemplateName,
+                existingTemplateVersion,
+                newTemplateVersion);
+        return true;
+      }
+    } else {
+      LOG.info("Index template {} does not exist and should be created", indexTemplateName);
+      return true;
+    }
+  }
+
+  private Optional<IndexTemplateMetadata> getIndexTemplateMetadata(final String indexTemplateName) throws IOException {
+    final IndexTemplatesExistRequest existsRequest = new IndexTemplatesExistRequest(indexTemplateName);
+    final boolean exists = restHighLevelClient.indices().existsTemplate(existsRequest, RequestOptions.DEFAULT);
+    if (!exists) {
+      return Optional.empty();
+    }
+
+    final GetIndexTemplatesRequest request = new GetIndexTemplatesRequest(indexTemplateName);
+    final GetIndexTemplatesResponse response = restHighLevelClient.indices().getIndexTemplate(request, RequestOptions.DEFAULT);
+
+    if (response.getIndexTemplates().size() == 1) {
+      return Optional.of(response.getIndexTemplates().get(0));
+    } else {
+      throw new RuntimeException(String.format("Found multiple index templates (%s) result when querying for %s",
+              response.getIndexTemplates().size(),
+              indexTemplateName));
+    }
   }
 
   private void checkAndCreateIndex() throws IOException {
     // Check alias exists
     final String indexAlias = esSinkConfig.getIndexConfiguration().getIndexAlias();
     final boolean isRaw = indexType.equals(IndexConstants.RAW);
-    final boolean exists = isRaw?
-            restHighLevelClient.indices().existsAlias(new GetAliasesRequest().aliases(indexAlias), RequestOptions.DEFAULT):
+    final boolean exists = isRaw ?
+            restHighLevelClient.indices().existsAlias(new GetAliasesRequest().aliases(indexAlias), RequestOptions.DEFAULT) :
             restHighLevelClient.indices().exists(new GetIndexRequest(indexAlias), RequestOptions.DEFAULT);
     if (!exists) {
       // TODO: use date as suffix?
@@ -185,8 +250,13 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
         if (e.getMessage().contains("resource_already_exists_exception")) {
           // Do nothing - likely caused by a race condition where the resource was created
           // by another host before this host's restClient made its request
+        } else if (e.getMessage().contains(String.format(INDEX_ALIAS_USED_AS_INDEX_ERROR, indexAlias))) {
+          // TODO: replace IOException with custom data-prepper exception
+          throw new IOException(
+                  String.format("An index exists with the same name as the reserved index alias name [%s], please delete or migrate the existing index",
+                          indexAlias));
         } else {
-          throw e;
+          throw new IOException(e);
         }
       }
     }
@@ -208,7 +278,7 @@ public class ElasticsearchSink extends AbstractSink<Record<String>> {
       }
     } else {
       LOG.warn("Document [{}] has failure: {}", docWriteRequest.toString(), failure);
-    };
+    }
   }
 
   @Override

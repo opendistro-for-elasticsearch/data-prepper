@@ -7,7 +7,6 @@ import com.amazon.dataprepper.metrics.MetricsTestUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import io.micrometer.core.instrument.Measurement;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
@@ -19,6 +18,8 @@ import org.junit.Test;
 import org.junit.Before;
 
 import static org.awaitility.Awaitility.await;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import java.io.BufferedReader;
@@ -40,6 +41,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -49,6 +51,8 @@ public class OTelTraceRawPrepperTest {
     private final static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final long TEST_TRACE_FLUSH_INTERVAL = 3L;
     private static final long TEST_ROOT_SPAN_FLUSH_DELAY = 1L;
+    private static final int TEST_CONCURRENCY_SCALE = 2;
+
     private static final String TEST_REQUEST_ONE_FULL_TRACE_GROUP_JSON_FILE = "sample-request-one-full-trace-group.json";
     private static final String TEST_REQUEST_ONE_TRACE_GROUP_MISSING_ROOT_JSON_FILE = "sample-request-one-trace-group-missing-root.json";
     private static final String TEST_REQUEST_TWO_FULL_TRACE_GROUP_JSON_FILE = "sample-request-two-full-trace-group.json";
@@ -70,12 +74,14 @@ public class OTelTraceRawPrepperTest {
                     put(OtelTraceRawPrepperConfig.ROOT_SPAN_FLUSH_DELAY, TEST_ROOT_SPAN_FLUSH_DELAY);
                 }});
         pluginSetting.setPipelineName("pipelineOTelTrace");
+        pluginSetting.setProcessWorkers(TEST_CONCURRENCY_SCALE);
         oTelTraceRawPrepper = new OTelTraceRawPrepper(pluginSetting);
-        executorService = Executors.newFixedThreadPool(2);
+        executorService = Executors.newFixedThreadPool(TEST_CONCURRENCY_SCALE);
     }
 
     @After
     public void tearDown() {
+        oTelTraceRawPrepper.shutdown();
         executorService.shutdown();
     }
 
@@ -128,7 +134,7 @@ public class OTelTraceRawPrepperTest {
         await().atMost(2 * TEST_ROOT_SPAN_FLUSH_DELAY, TimeUnit.SECONDS).untilAsserted(() -> {
             final List<Record<String>> processedRecords = (List<Record<String>>) oTelTraceRawPrepper.doExecute(Collections.emptyList());
             Assertions.assertThat(processedRecords.size()).isEqualTo(6);
-            Assertions.assertThat(getOrphanedSpanCount(processedRecords)).isEqualTo(0);
+            Assertions.assertThat(getMissingTraceGroupFieldsSpanCount(processedRecords)).isEqualTo(0);
         });
     }
 
@@ -149,7 +155,7 @@ public class OTelTraceRawPrepperTest {
                 processedRecords.addAll(future.get());
             }
             Assertions.assertThat(processedRecords.size()).isEqualTo(6);
-            Assertions.assertThat(getOrphanedSpanCount(processedRecords)).isEqualTo(0);
+            Assertions.assertThat(getMissingTraceGroupFieldsSpanCount(processedRecords)).isEqualTo(0);
         });
     }
 
@@ -160,7 +166,7 @@ public class OTelTraceRawPrepperTest {
         await().atMost(2 * TEST_TRACE_FLUSH_INTERVAL, TimeUnit.SECONDS).untilAsserted(() -> {
             final List<Record<String>> processedRecords = (List<Record<String>>) oTelTraceRawPrepper.doExecute(Collections.emptyList());
             Assertions.assertThat(processedRecords.size()).isEqualTo(4);
-            Assertions.assertThat(getOrphanedSpanCount(processedRecords)).isEqualTo(4);
+            Assertions.assertThat(getMissingTraceGroupFieldsSpanCount(processedRecords)).isEqualTo(4);
         });
     }
 
@@ -181,8 +187,28 @@ public class OTelTraceRawPrepperTest {
                 processedRecords.addAll(future.get());
             }
             Assertions.assertThat(processedRecords.size()).isEqualTo(5);
-            Assertions.assertThat(getOrphanedSpanCount(processedRecords)).isEqualTo(2);
+            Assertions.assertThat(getMissingTraceGroupFieldsSpanCount(processedRecords)).isEqualTo(2);
         });
+    }
+
+    @Test
+    public void testPrepareForShutdown() throws Exception {
+        // Assert no records in memory
+        assertTrue(oTelTraceRawPrepper.isReadyForShutdown());
+
+        // Add records to memory/queue
+        final ExportTraceServiceRequest exportTraceServiceRequest = buildExportTraceServiceRequestFromJsonFile(TEST_REQUEST_TWO_FULL_TRACE_GROUP_JSON_FILE);
+        oTelTraceRawPrepper.doExecute(Collections.singletonList(new Record<>(exportTraceServiceRequest)));
+
+        // Assert records exist in memory
+        assertFalse(oTelTraceRawPrepper.isReadyForShutdown());
+
+        // Force records to be flushed
+        oTelTraceRawPrepper.prepareForShutdown();
+        oTelTraceRawPrepper.doExecute(Collections.emptyList());
+
+        // Assert records have been flushed
+        assertTrue(oTelTraceRawPrepper.isReadyForShutdown());
     }
 
     private ExportTraceServiceRequest buildExportTraceServiceRequestFromJsonFile(String requestJsonFileName) throws IOException {
@@ -205,12 +231,16 @@ public class OTelTraceRawPrepperTest {
         return futures;
     }
 
-    private int getOrphanedSpanCount(List<Record<String>> records) throws JsonProcessingException {
+    private int getMissingTraceGroupFieldsSpanCount(List<Record<String>> records) throws JsonProcessingException {
         int count = 0;
         for (Record<String> record: records) {
-            String spanJson = record.getData();
+            final String spanJson = record.getData();
             Map<String, Object> spanMap = OBJECT_MAPPER.readValue(spanJson, new TypeReference<Map<String, Object>>() {});
-            if (spanMap.get("traceGroup") == null) {
+            final String traceGroupName = (String) spanMap.get("traceGroup");
+            final String traceGroupEndTime = (String) spanMap.get("traceGroupFields.endTime");
+            final Number traceGroupDurationInNanos = (Number) spanMap.get("traceGroupFields.durationInNanos");
+            final Number traceGroupStatusCode = (Number) spanMap.get("traceGroupFields.statusCode");
+            if (Stream.of(traceGroupName, traceGroupEndTime, traceGroupDurationInNanos, traceGroupStatusCode).allMatch(Objects::isNull)) {
                 count += 1;
             }
         }
