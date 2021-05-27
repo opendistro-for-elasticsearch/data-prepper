@@ -12,11 +12,11 @@
         }
       },
       {
-        "attributes_map": {
+        "span_attributes_map": {
           "mapping": {
             "type":"keyword"
           },
-          "path_match":"attributes.*"
+          "path_match":"span.attributes.*"
         }
       }
     ],
