@@ -25,7 +25,6 @@ import io.opentelemetry.proto.trace.v1.Span;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
-import org.openjdk.jmh.annotations.OperationsPerInvocation;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -43,8 +42,6 @@ import java.util.Map;
 import java.util.Random;
 
 public class ElasticsearchSinkBenchmarks {
-
-    private static final int OPERATIONS_PER_INVOCATION = 10;
 
     @State(Scope.Benchmark)
     public static class ElasticsearchSinkState {
@@ -136,7 +133,7 @@ public class ElasticsearchSinkBenchmarks {
         @Setup(Level.Invocation)
         public void generateBatch() throws JsonProcessingException {
             final List<Record<ExportTraceServiceRequest>> temp = new ArrayList<>();
-            for(int j=0; j<batchSize*OPERATIONS_PER_INVOCATION; j++) {
+            for(int j=0; j<batchSize; j++) {
                 final byte[] traceId = getTraceId();
                 final byte[] spanId = getSpanId(traceId);
                 final byte[] parentId = getParentId(traceId, spanId);
@@ -216,12 +213,7 @@ public class ElasticsearchSinkBenchmarks {
     @Benchmark
     @Fork(value = 1)
     @Warmup(iterations = 2)
-    @OperationsPerInvocation(value = OPERATIONS_PER_INVOCATION)
     public void benchmarkExecute(ElasticsearchSinkState elasticsearchSinkState, TestDataState testDataState) {
-        List<Record<String>> batch;
-        for (int i = 0; i < OPERATIONS_PER_INVOCATION; i++) {
-            batch = testDataState.bulk.subList(i*testDataState.batchSize, (i+1)*testDataState.batchSize);
-            elasticsearchSinkState.elasticsearchSink.output(batch);
-        }
+        elasticsearchSinkState.elasticsearchSink.output(testDataState.bulk);
     }
 }
