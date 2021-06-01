@@ -23,6 +23,16 @@ task jmh(type: JavaExec, dependsOn: jmhClasses) {
     main = 'org.openjdk.jmh.Main'
 }
 
+shadowJar {
+    from sourceSets.jmh.output
+    from sourceSets.main.output
+    from project.configurations.jmhRuntime
+
+    manifest {
+        attributes("Main-Class": "org.openjdk.jmh.Main")
+    }
+}
+
 dependencies {
     jmhCompile project(':data-prepper-plugins:otel-trace-raw-prepper')
     jmhCompile project(':data-prepper-plugins:elasticsearch')
