@@ -49,7 +49,7 @@ public class ServiceMapStatefulPrepperBenchmarks {
     @Param(value = "60")
     private int windowDurationSeconds;
 
-    @Param(value = "1")
+    @Param(value = "16")
     private int processWorkers;
 
     @Setup(Level.Trial)
