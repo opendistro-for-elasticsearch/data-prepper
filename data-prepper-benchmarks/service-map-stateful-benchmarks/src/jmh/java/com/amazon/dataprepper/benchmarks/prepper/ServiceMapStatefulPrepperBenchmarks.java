@@ -1,5 +1,6 @@
 package com.amazon.dataprepper.benchmarks.prepper;
 
+import com.amazon.dataprepper.model.configuration.PluginSetting;
 import com.amazon.dataprepper.plugins.prepper.ServiceMapStatefulPrepper;
 import com.google.protobuf.ByteString;
 import com.amazon.dataprepper.model.record.Record;
@@ -9,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -47,9 +49,15 @@ public class ServiceMapStatefulPrepperBenchmarks {
     @Param(value = "60")
     private int windowDurationSeconds;
 
+    @Param(value = "1")
+    private int processWorkers;
+
     @Setup(Level.Trial)
     public void setupServiceMapStatefulPrepper() {
-        serviceMapStatefulPrepper = new ServiceMapStatefulPrepper(windowDurationSeconds*1000, new File(DB_PATH), Clock.systemDefaultZone());
+        final PluginSetting pluginSetting = new PluginSetting("service-map-test", new HashMap<>()) {{
+            setPipelineName("test-pipeline");
+        }};
+        serviceMapStatefulPrepper = new ServiceMapStatefulPrepper(windowDurationSeconds*1000, new File(DB_PATH), Clock.systemDefaultZone(), processWorkers, pluginSetting);
     }
 
     /**
