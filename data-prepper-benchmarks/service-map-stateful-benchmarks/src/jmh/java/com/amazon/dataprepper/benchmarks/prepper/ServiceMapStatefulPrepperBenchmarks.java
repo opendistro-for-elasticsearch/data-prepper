@@ -49,7 +49,7 @@ public class ServiceMapStatefulPrepperBenchmarks {
     @Param(value = "60")
     private int windowDurationSeconds;
 
-    @Param(value = "16")
+    @Param(value = "1")
     private int processWorkers;
 
     @Setup(Level.Trial)
@@ -119,41 +119,8 @@ public class ServiceMapStatefulPrepperBenchmarks {
 
     @Benchmark
     @Fork(value = 1)
-    @Warmup(iterations = 0)
     @Threads(1)
-    public void benchmarkExecute_1_thread() {
-        serviceMapStatefulPrepper.execute(batch);
-    }
-
-    @Benchmark
-    @Fork(value = 1)
-    @Warmup(iterations = 0)
-    @Threads(2)
-    public void benchmarkExecute_2_threads() {
-        serviceMapStatefulPrepper.execute(batch);
-    }
-
-    @Benchmark
-    @Fork(value = 1)
-    @Warmup(iterations = 0)
-    @Threads(4)
-    public void benchmarkExecute_4_threads() {
-        serviceMapStatefulPrepper.execute(batch);
-    }
-
-    @Benchmark
-    @Fork(value = 1)
-    @Warmup(iterations = 0)
-    @Threads(8)
-    public void benchmarkExecute_8_threads() {
-        serviceMapStatefulPrepper.execute(batch);
-    }
-
-    @Benchmark
-    @Fork(value = 1)
-    @Warmup(iterations = 0)
-    @Threads(16)
-    public void benchmarkExecute_16_threads() {
+    public void benchmarkExecute() {
         serviceMapStatefulPrepper.execute(batch);
     }
 
