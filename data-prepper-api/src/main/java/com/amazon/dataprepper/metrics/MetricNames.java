@@ -4,7 +4,7 @@ public class MetricNames {
     private MetricNames() {}
 
     /**
-     * Metric dimension represents the dimension to drill-down on.
+     * Metric dimension representing service name.
      * Applicable to all components
      */
     public static final String SERVICE_NAME = "serviceName";

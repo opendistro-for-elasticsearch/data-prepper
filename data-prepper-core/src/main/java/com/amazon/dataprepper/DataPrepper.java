@@ -63,7 +63,7 @@ public class DataPrepper {
      */
     public static String getServiceNameForMetrics() {
         final String serviceName = System.getenv(DATAPREPPER_SERVICE_NAME);
-        return (serviceName != null && !"".equals(serviceName)) ? serviceName : DEFAULT_SERVICE_NAME;
+        return (serviceName != null && !serviceName.trim().isEmpty()) ? serviceName : DEFAULT_SERVICE_NAME;
     }
 
     public static DataPrepper getInstance() {
