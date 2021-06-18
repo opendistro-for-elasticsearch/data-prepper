@@ -27,6 +27,8 @@ import java.util.Map;
  */
 public class DataPrepper {
     private static final Logger LOG = LoggerFactory.getLogger(DataPrepper.class);
+    private static final String DATAPREPPER_SERVICE_NAME = "DATAPREPPER_SERVICE_NAME";
+    private static final String DEFAULT_SERVICE_NAME = "dataprepper";
 
     private static final CompositeMeterRegistry systemMeterRegistry = new CompositeMeterRegistry();
 
@@ -53,6 +55,15 @@ public class DataPrepper {
     public static void configureWithDefaults() {
         configuration = DataPrepperConfiguration.DEFAULT_CONFIG;
         configureMeterRegistry();
+    }
+
+    /**
+     * returns serviceName if exists or default serviceName
+     * @return serviceName for data-prepper
+     */
+    public static String getServiceNameForMetrics() {
+        final String serviceName = System.getenv(DATAPREPPER_SERVICE_NAME);
+        return (serviceName != null && !"".equals(serviceName)) ? serviceName : DEFAULT_SERVICE_NAME;
     }
 
     public static DataPrepper getInstance() {
