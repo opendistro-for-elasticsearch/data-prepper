@@ -12,6 +12,7 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
+import io.micrometer.core.instrument.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +64,7 @@ public class DataPrepper {
      */
     public static String getServiceNameForMetrics() {
         final String serviceName = System.getenv(DATAPREPPER_SERVICE_NAME);
-        return (serviceName != null && !serviceName.trim().isEmpty()) ? serviceName : DEFAULT_SERVICE_NAME;
+        return StringUtils.isNotBlank(serviceName) ? serviceName : DEFAULT_SERVICE_NAME;
     }
 
     public static DataPrepper getInstance() {
