@@ -8,7 +8,6 @@ import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -32,7 +31,6 @@ public class S3CertificateProviderTest {
     @Mock
     private S3Object privateKeyS3Object;
 
-    @InjectMocks
     private S3CertificateProvider s3CertificateProvider;
 
     @Test

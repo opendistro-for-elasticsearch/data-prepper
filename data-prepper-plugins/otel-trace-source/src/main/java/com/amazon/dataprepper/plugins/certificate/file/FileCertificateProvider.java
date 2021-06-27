@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class FileCertificateProvider implements CertificateProvider {
     private final String certificateFilePath;
@@ -14,8 +15,8 @@ public class FileCertificateProvider implements CertificateProvider {
 
     public FileCertificateProvider(final String certificateFilePath,
             final String privateKeyFilePath) {
-        this.certificateFilePath = certificateFilePath;
-        this.privateKeyFilePath = privateKeyFilePath;
+        this.certificateFilePath = Objects.requireNonNull(certificateFilePath);
+        this.privateKeyFilePath = Objects.requireNonNull(privateKeyFilePath);
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(FileCertificateProvider.class);

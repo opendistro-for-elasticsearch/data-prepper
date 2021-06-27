@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 public class S3CertificateProvider implements CertificateProvider {
     private static final Logger LOG = LoggerFactory.getLogger(S3CertificateProvider.class);
@@ -20,9 +21,9 @@ public class S3CertificateProvider implements CertificateProvider {
     public S3CertificateProvider(final AmazonS3 s3Client,
                                  final String certificateFilePath,
                                  final String privateKeyFilePath) {
-        this.s3Client = s3Client;
-        this.certificateFilePath = certificateFilePath;
-        this.privateKeyFilePath = privateKeyFilePath;
+        this.s3Client = Objects.requireNonNull(s3Client);
+        this.certificateFilePath = Objects.requireNonNull(certificateFilePath);
+        this.privateKeyFilePath = Objects.requireNonNull(privateKeyFilePath);
     }
 
     public Certificate getCertificate() {

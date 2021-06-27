@@ -25,6 +25,7 @@ import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.security.PrivateKey;
 import java.security.Security;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,9 +41,10 @@ public class ACMCertificateProvider implements CertificateProvider {
                                   final String acmArn,
                                   final long totalTimeout,
                                   final String passphrase) {
-        this.awsCertificateManager = awsCertificateManager;
-        this.acmArn = acmArn;
-        this.totalTimeout = totalTimeout;
+        this.awsCertificateManager = Objects.requireNonNull(awsCertificateManager);
+        this.acmArn = Objects.requireNonNull(acmArn);
+        this.totalTimeout = Objects.requireNonNull(totalTimeout);
+        // Passphrase can be null. If null a random passphrase will be generated.
         this.passphrase = passphrase;
         Security.addProvider(new BouncyCastleProvider());
     }
