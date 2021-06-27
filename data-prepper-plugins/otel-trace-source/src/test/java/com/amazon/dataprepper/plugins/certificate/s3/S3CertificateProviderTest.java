@@ -1,8 +1,6 @@
 package com.amazon.dataprepper.plugins.certificate.s3;
 
-import com.amazon.dataprepper.model.configuration.PluginSetting;
 import com.amazon.dataprepper.plugins.certificate.model.Certificate;
-import com.amazon.dataprepper.plugins.source.oteltrace.OTelTraceSourceConfig;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
@@ -16,8 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -27,7 +23,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class S3CertificateProviderTest {
-
     @Mock
     private AmazonS3 amazonS3;
 
@@ -40,8 +35,6 @@ public class S3CertificateProviderTest {
     @InjectMocks
     private S3CertificateProvider s3CertificateProvider;
 
-    private OTelTraceSourceConfig oTelTraceSourceConfig;
-
     @Test
     public void getCertificateValidKeyPathSuccess() {
         final String certificateContent = UUID.randomUUID().toString();
@@ -53,15 +46,6 @@ public class S3CertificateProviderTest {
         final String s3SslKeyCertChainFile = String.format("s3://%s/%s",bucketName, certificatePath);
         final String s3SslKeyFile = String.format("s3://%s/%s",bucketName, privateKeyPath);
 
-        final Map<String, Object> settingsMap = new HashMap<>();
-        settingsMap.put("sslKeyCertChainFile", s3SslKeyCertChainFile);
-        settingsMap.put("sslKeyFile", s3SslKeyFile);
-        settingsMap.put("awsRegion", "us-east-1");
-
-        final PluginSetting pluginSetting = new PluginSetting(null, settingsMap);
-        pluginSetting.setPipelineName("pipeline");
-
-        oTelTraceSourceConfig = OTelTraceSourceConfig.buildConfig(pluginSetting);
         final InputStream certObjectStream = IOUtils.toInputStream(certificateContent, StandardCharsets.UTF_8);
         final InputStream privateKeyObjectStream = IOUtils.toInputStream(privateKeyContent, StandardCharsets.UTF_8);
 
@@ -71,7 +55,9 @@ public class S3CertificateProviderTest {
         when(amazonS3.getObject(bucketName, certificatePath)).thenReturn(certS3Object);
         when(amazonS3.getObject(bucketName, privateKeyPath)).thenReturn(privateKeyS3Object);
 
-        final Certificate certificate = s3CertificateProvider.getCertificate(oTelTraceSourceConfig);
+        s3CertificateProvider = new S3CertificateProvider(amazonS3, s3SslKeyCertChainFile, s3SslKeyFile);
+
+        final Certificate certificate = s3CertificateProvider.getCertificate();
 
         assertThat(certificate.getCertificate(), is(certificateContent));
         assertThat(certificate.getPrivateKey(), is(privateKeyContent));
@@ -86,17 +72,9 @@ public class S3CertificateProviderTest {
         final String s3SslKeyCertChainFile = String.format("s3://%s/%s",bucketName, certificatePath);
         final String s3SslKeyFile = String.format("s3://%s/%s",bucketName, privateKeyPath);
 
-        final Map<String, Object> settingsMap = new HashMap<>();
-        settingsMap.put("sslKeyCertChainFile", s3SslKeyCertChainFile);
-        settingsMap.put("sslKeyFile", s3SslKeyFile);
-        settingsMap.put("awsRegion", "us-east-1");
-
-        final PluginSetting pluginSetting = new PluginSetting(null, settingsMap);
-        pluginSetting.setPipelineName("pipeline");
-
-        oTelTraceSourceConfig = OTelTraceSourceConfig.buildConfig(pluginSetting);
+        s3CertificateProvider = new S3CertificateProvider(amazonS3, s3SslKeyCertChainFile, s3SslKeyFile);
         when(amazonS3.getObject(anyString(), anyString())).thenThrow(new RuntimeException("S3 exception"));
 
-        Assertions.assertThrows(RuntimeException.class, () -> s3CertificateProvider.getCertificate(oTelTraceSourceConfig));
+        Assertions.assertThrows(RuntimeException.class, () -> s3CertificateProvider.getCertificate());
     }
 }

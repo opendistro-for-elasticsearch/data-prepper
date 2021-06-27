@@ -2,7 +2,6 @@ package com.amazon.dataprepper.plugins.certificate.s3;
 
 import com.amazon.dataprepper.plugins.certificate.CertificateProvider;
 import com.amazon.dataprepper.plugins.certificate.model.Certificate;
-import com.amazon.dataprepper.plugins.source.oteltrace.OTelTraceSourceConfig;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3URI;
 import com.amazonaws.services.s3.model.S3Object;
@@ -15,14 +14,20 @@ import java.nio.charset.StandardCharsets;
 public class S3CertificateProvider implements CertificateProvider {
     private static final Logger LOG = LoggerFactory.getLogger(S3CertificateProvider.class);
     private final AmazonS3 s3Client;
+    private final String certificateFilePath;
+    private final String privateKeyFilePath;
 
-    public S3CertificateProvider(final AmazonS3 s3Client) {
+    public S3CertificateProvider(final AmazonS3 s3Client,
+                                 final String certificateFilePath,
+                                 final String privateKeyFilePath) {
         this.s3Client = s3Client;
+        this.certificateFilePath = certificateFilePath;
+        this.privateKeyFilePath = privateKeyFilePath;
     }
 
-    public Certificate getCertificate(final OTelTraceSourceConfig oTelTraceSourceConfig) {
-        final AmazonS3URI certificateS3URI = new AmazonS3URI(oTelTraceSourceConfig.getSslKeyCertChainFile());
-        final AmazonS3URI privateKeyS3URI = new AmazonS3URI(oTelTraceSourceConfig.getSslKeyFile());
+    public Certificate getCertificate() {
+        final AmazonS3URI certificateS3URI = new AmazonS3URI(certificateFilePath);
+        final AmazonS3URI privateKeyS3URI = new AmazonS3URI(privateKeyFilePath);
         final String certificate = getObjectWithKey(certificateS3URI.getBucket(), certificateS3URI.getKey());
         final String privateKey = getObjectWithKey(privateKeyS3URI.getBucket(), privateKeyS3URI.getKey());
 

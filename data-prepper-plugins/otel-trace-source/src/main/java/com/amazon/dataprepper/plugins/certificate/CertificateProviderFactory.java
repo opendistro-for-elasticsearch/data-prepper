@@ -14,10 +14,15 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CertificateProviderManager {
-    private static final Logger LOG = LoggerFactory.getLogger(CertificateProviderManager.class);
+public class CertificateProviderFactory {
+    private static final Logger LOG = LoggerFactory.getLogger(CertificateProviderFactory.class);
 
-    public CertificateProvider getCertificateProvider(final OTelTraceSourceConfig oTelTraceSourceConfig) {
+    final OTelTraceSourceConfig oTelTraceSourceConfig;
+    public CertificateProviderFactory(final OTelTraceSourceConfig oTelTraceSourceConfig) {
+        this.oTelTraceSourceConfig = oTelTraceSourceConfig;
+    }
+
+    public CertificateProvider getCertificateProvider() {
         // ACM Cert for SSL takes preference
         if (oTelTraceSourceConfig.useAcmCertForSSL()) {
             LOG.info("Using ACM certificate and private key for SSL/TLS.");
@@ -29,7 +34,8 @@ public class CertificateProviderManager {
                     .withCredentials(credentialsProvider)
                     .withClientConfiguration(clientConfig)
                     .build();
-            return new ACMCertificateProvider(awsCertificateManager);
+            return new ACMCertificateProvider(awsCertificateManager, oTelTraceSourceConfig.getAcmCertificateArn(),
+                    oTelTraceSourceConfig.getAcmCertIssueTimeOutMillis(), oTelTraceSourceConfig.getAcmPrivateKeyPassword());
         } else if (oTelTraceSourceConfig.isSslCertAndKeyFileInS3()) {
             LOG.info("Using S3 to fetch certificate and private key for SSL/TLS.");
             final AWSCredentialsProvider credentialsProvider = new DefaultAWSCredentialsProviderChain();
@@ -37,10 +43,10 @@ public class CertificateProviderManager {
                     .withRegion(oTelTraceSourceConfig.getAwsRegion())
                     .withCredentials(credentialsProvider)
                     .build();
-            return new S3CertificateProvider(s3Client);
+            return new S3CertificateProvider(s3Client, oTelTraceSourceConfig.getSslKeyCertChainFile(), oTelTraceSourceConfig.getSslKeyFile());
         } else {
             LOG.info("Using local file system to get certificate and private key for SSL/TLS.");
-            return new FileCertificateProvider();
+            return new FileCertificateProvider(oTelTraceSourceConfig.getSslKeyCertChainFile(), oTelTraceSourceConfig.getSslKeyFile());
         }
     }
 }

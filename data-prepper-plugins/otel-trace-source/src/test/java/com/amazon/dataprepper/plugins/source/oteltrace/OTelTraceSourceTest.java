@@ -4,7 +4,7 @@ import com.amazon.dataprepper.model.configuration.PluginSetting;
 import com.amazon.dataprepper.model.record.Record;
 import com.amazon.dataprepper.plugins.buffer.blockingbuffer.BlockingBuffer;
 import com.amazon.dataprepper.plugins.certificate.CertificateProvider;
-import com.amazon.dataprepper.plugins.certificate.CertificateProviderManager;
+import com.amazon.dataprepper.plugins.certificate.CertificateProviderFactory;
 import com.amazon.dataprepper.plugins.certificate.model.Certificate;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
@@ -67,7 +67,7 @@ public class OTelTraceSourceTest {
     private Server server;
 
     @Mock
-    private CertificateProviderManager certificateProviderManager;
+    private CertificateProviderFactory certificateProviderFactory;
 
     @Mock
     private CertificateProvider certificateProvider;
@@ -259,8 +259,8 @@ public class OTelTraceSourceTest {
             final String keyAsString = Files.readString(keyFilePath);
             when(certificate.getCertificate()).thenReturn(certAsString);
             when(certificate.getPrivateKey()).thenReturn(keyAsString);
-            when(certificateProvider.getCertificate(any(OTelTraceSourceConfig.class))).thenReturn(certificate);
-            when(certificateProviderManager.getCertificateProvider(any(OTelTraceSourceConfig.class))).thenReturn(certificateProvider);
+            when(certificateProvider.getCertificate()).thenReturn(certificate);
+            when(certificateProviderFactory.getCertificateProvider()).thenReturn(certificateProvider);
             final Map<String, Object> settingsMap = new HashMap<>();
             settingsMap.put(SSL, true);
             settingsMap.put("useAcmCertForSSL", true);
@@ -271,7 +271,7 @@ public class OTelTraceSourceTest {
 
             testPluginSetting = new PluginSetting(null, settingsMap);
             testPluginSetting.setPipelineName("pipeline");
-            final OTelTraceSource source = new OTelTraceSource(testPluginSetting, certificateProviderManager);
+            final OTelTraceSource source = new OTelTraceSource(testPluginSetting, certificateProviderFactory);
             source.start(buffer);
             source.stop();
 

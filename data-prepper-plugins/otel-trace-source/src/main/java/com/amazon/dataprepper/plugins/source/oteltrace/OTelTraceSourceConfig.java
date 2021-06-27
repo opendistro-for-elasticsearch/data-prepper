@@ -2,6 +2,8 @@ package com.amazon.dataprepper.plugins.source.oteltrace;
 
 import com.amazon.dataprepper.model.configuration.PluginSetting;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class OTelTraceSourceConfig {
     static final String REQUEST_TIMEOUT = "request_timeout";
     static final String PORT = "port";
@@ -88,7 +90,7 @@ public class OTelTraceSourceConfig {
     }
 
     private void validateSSLArgument(final String sslTypeMessage, final String argument, final String argumentName) {
-        if (argument == null || argument.isEmpty()) {
+        if (StringUtils.isEmpty(argument)) {
             throw new IllegalArgumentException(String.format("%s, %s can not be empty or null", sslTypeMessage, argumentName));
         }
     }
@@ -100,7 +102,7 @@ public class OTelTraceSourceConfig {
 
     private boolean isSSLCertificateLocatedInS3() {
         return sslKeyCertChainFile.toLowerCase().startsWith(S3_PREFIX) &&
-                sslKeyCertChainFile.toLowerCase().startsWith(S3_PREFIX);
+                sslKeyFile.toLowerCase().startsWith(S3_PREFIX);
     }
 
     public static OTelTraceSourceConfig buildConfig(final PluginSetting pluginSetting) {

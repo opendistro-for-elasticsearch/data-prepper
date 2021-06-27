@@ -6,7 +6,6 @@ import com.amazon.dataprepper.plugins.certificate.file.FileCertificateProvider;
 import com.amazon.dataprepper.plugins.certificate.s3.S3CertificateProvider;
 import com.amazon.dataprepper.plugins.source.oteltrace.OTelTraceSourceConfig;
 import org.hamcrest.core.IsInstanceOf;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -17,19 +16,13 @@ import java.util.Map;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @ExtendWith(MockitoExtension.class)
-public class CertificateProviderManagerTest {
+public class CertificateProviderFactoryTest {
     private OTelTraceSourceConfig oTelTraceSourceConfig;
-    private CertificateProviderManager certificateProviderManager;
-
-    @BeforeEach
-    public void beforeEach() {
-        certificateProviderManager = new CertificateProviderManager();
-    }
+    private CertificateProviderFactory certificateProviderFactory;
 
     @Test
     public void getCertificateProviderAcmProviderSuccess() {
         final Map<String, Object> settingsMap = new HashMap<>();
-        //settingsMap.put(SSL, true);
         settingsMap.put("useAcmCertForSSL", true);
         settingsMap.put("awsRegion", "us-east-1");
         settingsMap.put("acmCertificateArn", "arn:aws:acm:us-east-1:account:certificate/1234-567-856456");
@@ -40,7 +33,8 @@ public class CertificateProviderManagerTest {
         pluginSetting.setPipelineName("pipeline");
         oTelTraceSourceConfig = OTelTraceSourceConfig.buildConfig(pluginSetting);
 
-        final CertificateProvider certificateProvider = certificateProviderManager.getCertificateProvider(oTelTraceSourceConfig);
+        certificateProviderFactory = new CertificateProviderFactory(oTelTraceSourceConfig);
+        final CertificateProvider certificateProvider = certificateProviderFactory.getCertificateProvider();
 
         assertThat(certificateProvider, IsInstanceOf.instanceOf(ACMCertificateProvider.class));
     }
@@ -57,7 +51,8 @@ public class CertificateProviderManagerTest {
         pluginSetting.setPipelineName("pipeline");
         oTelTraceSourceConfig = OTelTraceSourceConfig.buildConfig(pluginSetting);
 
-        final CertificateProvider certificateProvider = certificateProviderManager.getCertificateProvider(oTelTraceSourceConfig);
+        certificateProviderFactory = new CertificateProviderFactory(oTelTraceSourceConfig);
+        final CertificateProvider certificateProvider = certificateProviderFactory.getCertificateProvider();
 
         assertThat(certificateProvider, IsInstanceOf.instanceOf(S3CertificateProvider.class));
     }
@@ -73,7 +68,8 @@ public class CertificateProviderManagerTest {
         pluginSetting.setPipelineName("pipeline");
         oTelTraceSourceConfig = OTelTraceSourceConfig.buildConfig(pluginSetting);
 
-        final CertificateProvider certificateProvider = certificateProviderManager.getCertificateProvider(oTelTraceSourceConfig);
+        certificateProviderFactory = new CertificateProviderFactory(oTelTraceSourceConfig);
+        final CertificateProvider certificateProvider = certificateProviderFactory.getCertificateProvider();
 
         assertThat(certificateProvider, IsInstanceOf.instanceOf(FileCertificateProvider.class));
     }

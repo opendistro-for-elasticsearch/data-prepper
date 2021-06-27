@@ -8,7 +8,7 @@ import com.amazon.dataprepper.model.configuration.PluginSetting;
 import com.amazon.dataprepper.model.record.Record;
 import com.amazon.dataprepper.model.source.Source;
 import com.amazon.dataprepper.plugins.certificate.CertificateProvider;
-import com.amazon.dataprepper.plugins.certificate.CertificateProviderManager;
+import com.amazon.dataprepper.plugins.certificate.CertificateProviderFactory;
 import com.amazon.dataprepper.plugins.certificate.model.Certificate;
 import com.amazon.dataprepper.plugins.health.HealthGrpcService;
 import com.linecorp.armeria.server.Server;
@@ -31,19 +31,19 @@ public class OTelTraceSource implements Source<Record<ExportTraceServiceRequest>
     private final OTelTraceSourceConfig oTelTraceSourceConfig;
     private Server server;
     private final PluginMetrics pluginMetrics;
-    private final CertificateProviderManager certificateProviderManager;
+    private final CertificateProviderFactory certificateProviderFactory;
 
     public OTelTraceSource(final PluginSetting pluginSetting) {
         oTelTraceSourceConfig = OTelTraceSourceConfig.buildConfig(pluginSetting);
         pluginMetrics = PluginMetrics.fromPluginSetting(pluginSetting);
-        certificateProviderManager = new CertificateProviderManager();
+        certificateProviderFactory = new CertificateProviderFactory(oTelTraceSourceConfig);
     }
 
     // accessible only in the same package for unit test
-    OTelTraceSource(final PluginSetting pluginSetting, final CertificateProviderManager certificateProviderManager) {
+    OTelTraceSource(final PluginSetting pluginSetting, final CertificateProviderFactory certificateProviderFactory) {
         oTelTraceSourceConfig = OTelTraceSourceConfig.buildConfig(pluginSetting);
         pluginMetrics = PluginMetrics.fromPluginSetting(pluginSetting);
-        this.certificateProviderManager = certificateProviderManager;
+        this.certificateProviderFactory = certificateProviderFactory;
     }
 
     @Override
@@ -82,8 +82,8 @@ public class OTelTraceSource implements Source<Record<ExportTraceServiceRequest>
             // ACM Cert for SSL takes preference
             if (oTelTraceSourceConfig.isSsl() || oTelTraceSourceConfig.useAcmCertForSSL()) {
                 LOG.info("SSL/TLS is enabled.");
-                final CertificateProvider certificateProvider = certificateProviderManager.getCertificateProvider(oTelTraceSourceConfig);
-                final Certificate certificate = certificateProvider.getCertificate(oTelTraceSourceConfig);
+                final CertificateProvider certificateProvider = certificateProviderFactory.getCertificateProvider();
+                final Certificate certificate = certificateProvider.getCertificate();
                 sb.https(oTelTraceSourceConfig.getPort()).tls(
                     new ByteArrayInputStream(certificate.getCertificate().getBytes(StandardCharsets.UTF_8)),
                     new ByteArrayInputStream(certificate.getPrivateKey().getBytes(StandardCharsets.UTF_8)

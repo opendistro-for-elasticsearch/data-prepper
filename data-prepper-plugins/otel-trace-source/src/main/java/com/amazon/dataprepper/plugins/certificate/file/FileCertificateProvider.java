@@ -2,7 +2,6 @@ package com.amazon.dataprepper.plugins.certificate.file;
 
 import com.amazon.dataprepper.plugins.certificate.CertificateProvider;
 import com.amazon.dataprepper.plugins.certificate.model.Certificate;
-import com.amazon.dataprepper.plugins.source.oteltrace.OTelTraceSourceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,15 +9,24 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class FileCertificateProvider implements CertificateProvider {
+    private final String certificateFilePath;
+    private final String privateKeyFilePath;
+
+    public FileCertificateProvider(final String certificateFilePath,
+            final String privateKeyFilePath) {
+        this.certificateFilePath = certificateFilePath;
+        this.privateKeyFilePath = privateKeyFilePath;
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(FileCertificateProvider.class);
 
-    public Certificate getCertificate(final OTelTraceSourceConfig oTelTraceSourceConfig) {
+    public Certificate getCertificate() {
         try {
-            final Path certFilePath = Path.of(oTelTraceSourceConfig.getSslKeyCertChainFile());
-            final Path privatedKeyFilePath = Path.of(oTelTraceSourceConfig.getSslKeyFile());
+            final Path certFilePath = Path.of(certificateFilePath);
+            final Path pkFilePath = Path.of(privateKeyFilePath);
 
             final String certAsString = Files.readString(certFilePath);
-            final String privateKeyAsString = Files.readString(privatedKeyFilePath);
+            final String privateKeyAsString = Files.readString(pkFilePath);
 
             return new Certificate(certAsString, privateKeyAsString);
         } catch (final Exception ex) {
