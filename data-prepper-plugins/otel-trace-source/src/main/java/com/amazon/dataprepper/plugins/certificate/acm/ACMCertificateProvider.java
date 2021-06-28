@@ -32,6 +32,7 @@ import java.security.Security;
 public class ACMCertificateProvider {
     private static final Logger LOG = LoggerFactory.getLogger(ACMCertificateProvider.class);
     private static final long SLEEP_INTERVAL = 10000L;
+    private static final String BOUNCY_CASTLE_PROVIDER = "BC";
     private final AWSCertificateManager awsCertificateManager;
     private final long totalTimeout;
 
@@ -47,6 +48,7 @@ public class ACMCertificateProvider {
         this.totalTimeout = totalTimeout;
     }
 
+    // accessible only in the same package for unit test
     ACMCertificateProvider(final AWSCertificateManager awsCertificateManager, final long totalTimeout) {
         this.awsCertificateManager = awsCertificateManager;
         this.totalTimeout = totalTimeout;
@@ -110,7 +112,7 @@ public class ACMCertificateProvider {
                 LOG.debug("key in pkcs8 encoding");
                 final PKCS8EncryptedPrivateKeyInfo epki = (PKCS8EncryptedPrivateKeyInfo) o;
                 final JcePKCSPBEInputDecryptorProviderBuilder builder =
-                        new JcePKCSPBEInputDecryptorProviderBuilder().setProvider("BC");
+                        new JcePKCSPBEInputDecryptorProviderBuilder().setProvider(BOUNCY_CASTLE_PROVIDER);
                 final InputDecryptorProvider idp = builder.build(password);
                 pki = epki.decryptPrivateKeyInfo(idp);
             } else if (o instanceof PEMEncryptedKeyPair) { // encrypted private key in pkcs1-format
@@ -125,7 +127,7 @@ public class ACMCertificateProvider {
             } else {
                 throw new PKCSException("Invalid encrypted private key class: " + o != null ? o.getClass().getName() : null);
             }
-            final JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+            final JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider(BOUNCY_CASTLE_PROVIDER);
             return converter.getPrivateKey(pki);
         }
     }
