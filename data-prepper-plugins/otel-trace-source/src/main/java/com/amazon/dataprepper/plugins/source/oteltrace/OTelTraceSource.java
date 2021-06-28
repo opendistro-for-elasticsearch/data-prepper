@@ -82,7 +82,7 @@ public class OTelTraceSource implements Source<Record<ExportTraceServiceRequest>
             sb.requestTimeoutMillis(oTelTraceSourceConfig.getRequestTimeoutInMillis());
 
             // ACM Cert for SSL takes preference
-            if (oTelTraceSourceConfig.isUseAcmCertForSSL()) {
+            if (oTelTraceSourceConfig.useAcmCertForSSL()) {
                 LOG.info("SSL/TLS is enabled. Using ACM certificate for SSL.");
                 final Arn acmArn = Arn.fromString(oTelTraceSourceConfig.getAcmCertificateArn());
                 final ACMCertificateProvider acmCertificateProvider = getACMCertificateProvider(acmArn.getRegion());

@@ -115,7 +115,7 @@ public class OTelTraceSourceConfig {
         return ssl;
     }
 
-    public boolean isUseAcmCertForSSL() {
+    public boolean useAcmCertForSSL() {
         return useAcmCertForSSL;
     }
 

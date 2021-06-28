@@ -46,6 +46,7 @@ public class ACMCertificateProvider {
             .withClientConfiguration(clientConfig)
             .build();
         this.totalTimeout = totalTimeout;
+        Security.addProvider(new BouncyCastleProvider());
     }
 
     // accessible only in the same package for unit test
@@ -85,7 +86,6 @@ public class ACMCertificateProvider {
     }
 
     private String getDecryptedPrivateKey(final String encryptedPrivateKey, final String keyPassword) {
-        Security.addProvider(new BouncyCastleProvider());
         try {
             final PrivateKey rsaPrivateKey = encryptedPrivateKeyStringToPrivateKey(encryptedPrivateKey, keyPassword.toCharArray());
             return privateKeyAsString(rsaPrivateKey);
