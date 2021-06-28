@@ -53,6 +53,7 @@ public class ACMCertificateProvider {
     ACMCertificateProvider(final AWSCertificateManager awsCertificateManager, final long totalTimeout) {
         this.awsCertificateManager = awsCertificateManager;
         this.totalTimeout = totalTimeout;
+        Security.addProvider(new BouncyCastleProvider());
     }
 
     public Certificate getACMCertificate(final String acmArn, final String passphrase) {
