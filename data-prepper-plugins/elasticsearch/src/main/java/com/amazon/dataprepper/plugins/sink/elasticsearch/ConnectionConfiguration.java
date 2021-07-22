@@ -66,6 +66,7 @@ public class ConnectionConfiguration {
   private final boolean awsSigv4;
   private final String awsRegion;
   private final String awsStsRole;
+  private final String pipelineName;
 
   public List<String> getHosts() {
     return hosts;
@@ -114,6 +115,7 @@ public class ConnectionConfiguration {
     this.awsSigv4 = builder.awsSigv4;
     this.awsRegion = builder.awsRegion;
     this.awsStsRole = builder.awsStsRole;
+    this.pipelineName = builder.pipelineName;
   }
 
   public static ConnectionConfiguration readConnectionConfiguration(final PluginSetting pluginSetting){
@@ -121,6 +123,7 @@ public class ConnectionConfiguration {
     final List<String> hosts = (List<String>) pluginSetting.getAttributeFromSettings(HOSTS);
     ConnectionConfiguration.Builder builder = new ConnectionConfiguration.Builder(hosts);
     final String username = (String) pluginSetting.getAttributeFromSettings(USERNAME);
+    builder.withPipelineName(pluginSetting.getPipelineName());
     if (username != null) {
       builder = builder.withUsername(username);
     }
@@ -152,6 +155,10 @@ public class ConnectionConfiguration {
       builder = builder.withInsecure(insecure);
     }
     return builder.build();
+  }
+
+  public String getPipelineName() {
+    return pipelineName;
   }
 
   public RestHighLevelClient createClient() {
@@ -194,7 +201,7 @@ public class ConnectionConfiguration {
       credentialsProvider = StsAssumeRoleCredentialsProvider.builder()
               .stsClient(StsClient.create())
               .refreshRequest(AssumeRoleRequest.builder()
-                      .roleSessionName("Elasticsearch-Sink-" + UUID.randomUUID()
+                      .roleSessionName(pipelineName + " Elasticsearch-Sink " + UUID.randomUUID()
                               .toString())
                       .roleArn(awsStsRole)
                       .build())
@@ -275,6 +282,7 @@ public class ConnectionConfiguration {
     private boolean awsSigv4;
     private String awsRegion;
     private String awsStsRole;
+    private String pipelineName;
 
 
     public Builder(final List<String> hosts) {
@@ -331,6 +339,11 @@ public class ConnectionConfiguration {
 
     public Builder withAWSStsRole(final String awsStsRole) {
       this.awsStsRole = awsStsRole;
+      return this;
+    }
+
+    public Builder withPipelineName(final String pipelineName) {
+      this.pipelineName = pipelineName;
       return this;
     }
 

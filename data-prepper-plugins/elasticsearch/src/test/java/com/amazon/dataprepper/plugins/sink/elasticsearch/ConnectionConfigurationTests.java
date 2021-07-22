@@ -21,6 +21,7 @@ public class ConnectionConfigurationTests {
     private final List<String> TEST_HOSTS = Collections.singletonList("http://localhost:9200");
     private final String TEST_USERNAME = "admin";
     private final String TEST_PASSWORD = "admin";
+    private final String TEST_PIPELINE_NAME = "Test-Pipeline";
     private final Integer TEST_CONNECT_TIMEOUT = 5;
     private final Integer TEST_SOCKET_TIMEOUT = 10;
     private final String TEST_CERT_PATH = Objects.requireNonNull(getClass().getClassLoader().getResource("test-ca.pem")).getFile();
@@ -38,6 +39,7 @@ public class ConnectionConfigurationTests {
         assertNull(connectionConfiguration.getCertPath());
         assertNull(connectionConfiguration.getConnectTimeout());
         assertNull(connectionConfiguration.getSocketTimeout());
+        assertEquals(TEST_PIPELINE_NAME, connectionConfiguration.getPipelineName());
     }
 
     @Test
@@ -63,6 +65,7 @@ public class ConnectionConfigurationTests {
         assertEquals(TEST_CONNECT_TIMEOUT, connectionConfiguration.getConnectTimeout());
         assertEquals(TEST_SOCKET_TIMEOUT, connectionConfiguration.getSocketTimeout());
         assertFalse(connectionConfiguration.isAwsSigv4());
+        assertEquals(TEST_PIPELINE_NAME, connectionConfiguration.getPipelineName());
     }
 
     @Test
@@ -115,7 +118,8 @@ public class ConnectionConfigurationTests {
         final ConnectionConfiguration connectionConfiguration =
                 ConnectionConfiguration.readConnectionConfiguration(pluginSetting);
         assertEquals("us-east-1", connectionConfiguration.getAwsRegion());
-        assertTrue(connectionConfiguration.isAwsSigv4());;
+        assertTrue(connectionConfiguration.isAwsSigv4());
+        assertEquals(TEST_PIPELINE_NAME, connectionConfiguration.getPipelineName());
     }
 
     @Test
@@ -126,6 +130,7 @@ public class ConnectionConfigurationTests {
                 ConnectionConfiguration.readConnectionConfiguration(pluginSetting);
         assertEquals("us-east-1", connectionConfiguration.getAwsRegion());
         assertTrue(connectionConfiguration.isAwsSigv4());
+        assertEquals(TEST_PIPELINE_NAME, connectionConfiguration.getPipelineName());
     }
 
     @Test
@@ -136,6 +141,7 @@ public class ConnectionConfigurationTests {
                 ConnectionConfiguration.readConnectionConfiguration(pluginSetting);
         assertEquals("us-east-1", connectionConfiguration.getAwsRegion());
         assertTrue(connectionConfiguration.isAwsSigv4());
+        assertEquals(TEST_PIPELINE_NAME, connectionConfiguration.getPipelineName());
     }
 
     @Test
@@ -147,6 +153,7 @@ public class ConnectionConfigurationTests {
         assertEquals("us-east-1", connectionConfiguration.getAwsRegion());
         assertTrue(connectionConfiguration.isAwsSigv4());
         assertEquals("some-iam-role", connectionConfiguration.getAwsStsRole());
+        assertEquals(TEST_PIPELINE_NAME, connectionConfiguration.getPipelineName());
     }
 
     private PluginSetting generatePluginSetting(
@@ -166,7 +173,8 @@ public class ConnectionConfigurationTests {
         metadata.put("aws_sts_role", awsStsRole);
         metadata.put("cert", certPath);
         metadata.put("insecure", insecure);
-
-        return new PluginSetting("elasticsearch", metadata);
+        final PluginSetting pluginSetting = new PluginSetting("elasticsearch", metadata);
+        pluginSetting.setPipelineName(TEST_PIPELINE_NAME);
+        return pluginSetting;
     }
 }
