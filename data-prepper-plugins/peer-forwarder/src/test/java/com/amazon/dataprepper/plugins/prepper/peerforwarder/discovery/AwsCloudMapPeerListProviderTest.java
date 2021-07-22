@@ -73,7 +73,7 @@ class AwsCloudMapPeerListProviderTest {
     }
 
     private AwsCloudMapPeerListProvider createObjectUnderTest() {
-        AwsCloudMapPeerListProvider objectUnderTest = new AwsCloudMapPeerListProvider(awsServiceDiscovery, namespaceName, serviceName, timeToRefreshSeconds, backoff, pluginMetrics);
+        final AwsCloudMapPeerListProvider objectUnderTest = new AwsCloudMapPeerListProvider(awsServiceDiscovery, namespaceName, serviceName, timeToRefreshSeconds, backoff, pluginMetrics);
         objectsToClose.add(objectUnderTest);
         return objectUnderTest;
     }
@@ -112,7 +112,7 @@ class AwsCloudMapPeerListProviderTest {
 
     @ParameterizedTest
     @ValueSource(ints = {Integer.MIN_VALUE, -10, -1, 0})
-    void constructor_throws_with_non_positive_timeToRefreshSeconds(int badTimeToRefresh) {
+    void constructor_throws_with_non_positive_timeToRefreshSeconds(final int badTimeToRefresh) {
         timeToRefreshSeconds = badTimeToRefresh;
 
         assertThrows(IllegalArgumentException.class,
@@ -125,14 +125,14 @@ class AwsCloudMapPeerListProviderTest {
 
         waitUntilDiscoverInstancesCalledAtLeastOnce();
 
-        ArgumentCaptor<DiscoverInstancesRequest> requestArgumentCaptor =
+        final ArgumentCaptor<DiscoverInstancesRequest> requestArgumentCaptor =
                 ArgumentCaptor.forClass(DiscoverInstancesRequest.class);
 
         then(awsServiceDiscovery)
                 .should()
                 .discoverInstances(requestArgumentCaptor.capture());
 
-        DiscoverInstancesRequest actualRequest = requestArgumentCaptor.getValue();
+        final DiscoverInstancesRequest actualRequest = requestArgumentCaptor.getValue();
 
         assertThat(actualRequest.namespaceName(), equalTo(namespaceName));
         assertThat(actualRequest.serviceName(), equalTo(serviceName));
@@ -141,11 +141,11 @@ class AwsCloudMapPeerListProviderTest {
 
     @Test
     void getPeerList_is_empty_before_populated() {
-        AwsCloudMapPeerListProvider objectUnderTest = createObjectUnderTest();
+        final AwsCloudMapPeerListProvider objectUnderTest = createObjectUnderTest();
 
         waitUntilDiscoverInstancesCalledAtLeastOnce();
 
-        List<String> peerList = objectUnderTest.getPeerList();
+        final List<String> peerList = objectUnderTest.getPeerList();
 
         assertThat(peerList, notNullValue());
         assertThat(peerList.size(), equalTo(0));
@@ -160,7 +160,7 @@ class AwsCloudMapPeerListProviderTest {
         void setUp() {
             discoverInstancesResponse = mock(DiscoverInstancesResponse.class);
 
-            CompletableFuture<DiscoverInstancesResponse> discoverFuture =
+            final CompletableFuture<DiscoverInstancesResponse> discoverFuture =
                     CompletableFuture.completedFuture(discoverInstancesResponse);
 
             given(awsServiceDiscovery.discoverInstances(any(DiscoverInstancesRequest.class)))
@@ -171,11 +171,11 @@ class AwsCloudMapPeerListProviderTest {
         void getPeerList_returns_empty_when_DiscoverInstances_has_no_instances() {
             given(discoverInstancesResponse.instances()).willReturn(Collections.emptyList());
 
-            AwsCloudMapPeerListProvider objectUnderTest = createObjectUnderTest();
+            final AwsCloudMapPeerListProvider objectUnderTest = createObjectUnderTest();
 
             waitUntilDiscoverInstancesCalledAtLeastOnce();
 
-            List<String> peerList = objectUnderTest.getPeerList();
+            final List<String> peerList = objectUnderTest.getPeerList();
             assertThat(peerList, notNullValue());
             assertThat(peerList.size(), equalTo(0));
         }
@@ -183,14 +183,14 @@ class AwsCloudMapPeerListProviderTest {
         @Test
         void getPeerList_returns_list_as_found() {
 
-            List<String> knownIpPeers = IntStream.range(0, 3)
+            final List<String> knownIpPeers = IntStream.range(0, 3)
                     .mapToObj(i -> generateRandomIp())
                     .collect(Collectors.toList());
 
-            List<HttpInstanceSummary> instances = knownIpPeers
+            final List<HttpInstanceSummary> instances = knownIpPeers
                     .stream()
                     .map(ip -> {
-                        HttpInstanceSummary instanceSummary = mock(HttpInstanceSummary.class);
+                        final HttpInstanceSummary instanceSummary = mock(HttpInstanceSummary.class);
                         given(instanceSummary.attributes()).willReturn(
                                 Collections.singletonMap("AWS_INSTANCE_IPV4", ip));
                         return instanceSummary;
@@ -199,11 +199,11 @@ class AwsCloudMapPeerListProviderTest {
 
             given(discoverInstancesResponse.instances()).willReturn(instances);
 
-            AwsCloudMapPeerListProvider objectUnderTest = createObjectUnderTest();
+            final AwsCloudMapPeerListProvider objectUnderTest = createObjectUnderTest();
 
             waitUntilPeerListPopulated(objectUnderTest);
 
-            List<String> actualPeers = objectUnderTest.getPeerList();
+            final List<String> actualPeers = objectUnderTest.getPeerList();
             assertThat(actualPeers, notNullValue());
             assertThat(actualPeers.size(), equalTo(instances.size()));
 
@@ -217,7 +217,7 @@ class AwsCloudMapPeerListProviderTest {
 
             waitUntilDiscoverInstancesCalledAtLeast(2);
 
-            ArgumentCaptor<DiscoverInstancesRequest> requestArgumentCaptor =
+            final ArgumentCaptor<DiscoverInstancesRequest> requestArgumentCaptor =
                     ArgumentCaptor.forClass(DiscoverInstancesRequest.class);
 
             then(awsServiceDiscovery)
@@ -239,16 +239,16 @@ class AwsCloudMapPeerListProviderTest {
 
         @BeforeEach
         void setUp() {
-            DiscoverInstancesResponse discoverInstancesResponse = mock(DiscoverInstancesResponse.class);
+            final DiscoverInstancesResponse discoverInstancesResponse = mock(DiscoverInstancesResponse.class);
 
             knownIpPeers = IntStream.range(0, 3)
                     .mapToObj(i -> generateRandomIp())
                     .collect(Collectors.toList());
 
-            List<HttpInstanceSummary> instances = knownIpPeers
+            final List<HttpInstanceSummary> instances = knownIpPeers
                     .stream()
                     .map(ip -> {
-                        HttpInstanceSummary instanceSummary = mock(HttpInstanceSummary.class);
+                        final HttpInstanceSummary instanceSummary = mock(HttpInstanceSummary.class);
                         given(instanceSummary.attributes()).willReturn(
                                 Collections.singletonMap("AWS_INSTANCE_IPV4", ip));
                         return instanceSummary;
@@ -257,11 +257,11 @@ class AwsCloudMapPeerListProviderTest {
 
             given(discoverInstancesResponse.instances()).willReturn(instances);
 
-            CompletableFuture<DiscoverInstancesResponse> failedFuture1 = new CompletableFuture<>();
+            final CompletableFuture<DiscoverInstancesResponse> failedFuture1 = new CompletableFuture<>();
             failedFuture1.completeExceptionally(mock(Throwable.class));
-            CompletableFuture<DiscoverInstancesResponse> failedFuture2 = new CompletableFuture<>();
+            final CompletableFuture<DiscoverInstancesResponse> failedFuture2 = new CompletableFuture<>();
             failedFuture2.completeExceptionally(mock(Throwable.class));
-            CompletableFuture<DiscoverInstancesResponse> successFuture = CompletableFuture.completedFuture(discoverInstancesResponse);
+            final CompletableFuture<DiscoverInstancesResponse> successFuture = CompletableFuture.completedFuture(discoverInstancesResponse);
 
             given(awsServiceDiscovery.discoverInstances(any(DiscoverInstancesRequest.class)))
                     .willReturn(failedFuture1)
@@ -276,25 +276,25 @@ class AwsCloudMapPeerListProviderTest {
         @Test
         void getPeerList_returns_value_after_several_failed_attempts() {
 
-            AwsCloudMapPeerListProvider objectUnderTest = createObjectUnderTest();
+            final AwsCloudMapPeerListProvider objectUnderTest = createObjectUnderTest();
 
             waitUntilDiscoverInstancesCalledAtLeastOnce();
 
-            List<String> expectedEmpty = objectUnderTest.getPeerList();
+            final List<String> expectedEmpty = objectUnderTest.getPeerList();
 
             assertThat(expectedEmpty, notNullValue());
             assertThat(expectedEmpty.size(), equalTo(0));
 
             waitUntilPeerListPopulated(objectUnderTest);
 
-            List<String> expectedPopulated = objectUnderTest.getPeerList();
+            final List<String> expectedPopulated = objectUnderTest.getPeerList();
 
             assertThat(expectedPopulated, notNullValue());
             assertThat(expectedPopulated.size(), equalTo(knownIpPeers.size()));
 
             assertThat(new HashSet<>(expectedPopulated), equalTo(new HashSet<>(knownIpPeers)));
 
-            InOrder inOrder = inOrder(backoff);
+            final InOrder inOrder = inOrder(backoff);
             then(backoff)
                     .should(inOrder)
                     .nextDelayMillis(1);
@@ -310,7 +310,7 @@ class AwsCloudMapPeerListProviderTest {
 
             final List<Endpoint> listenerEndpoints = new ArrayList<>();
 
-            AwsCloudMapPeerListProvider objectUnderTest = createObjectUnderTest();
+            final AwsCloudMapPeerListProvider objectUnderTest = createObjectUnderTest();
 
             objectUnderTest.addListener(listenerEndpoints::addAll);
 
@@ -322,13 +322,13 @@ class AwsCloudMapPeerListProviderTest {
 
             assertThat(listenerEndpoints.size(), equalTo(knownIpPeers.size()));
 
-            Set<String> observedIps = listenerEndpoints.stream()
+            final Set<String> observedIps = listenerEndpoints.stream()
                     .map(Endpoint::ipAddr)
                     .collect(Collectors.toSet());
 
             assertThat(observedIps, equalTo(new HashSet<>(knownIpPeers)));
 
-            InOrder inOrder = inOrder(backoff);
+            final InOrder inOrder = inOrder(backoff);
             then(backoff)
                     .should(inOrder)
                     .nextDelayMillis(1);
@@ -350,8 +350,8 @@ class AwsCloudMapPeerListProviderTest {
      *
      * @param timesCalled The number of times to wait for it to be called.
      */
-    private void waitUntilDiscoverInstancesCalledAtLeast(int timesCalled) {
-        long waitTimeMillis = (long)(timesCalled * 1000 * 1.2);
+    private void waitUntilDiscoverInstancesCalledAtLeast(final int timesCalled) {
+        final long waitTimeMillis = (long) (timesCalled * 1000 * 1.2);
         Awaitility.waitAtMost(waitTimeMillis, TimeUnit.MILLISECONDS)
                 .pollDelay(100, TimeUnit.MILLISECONDS)
                 .untilAsserted(() -> then(awsServiceDiscovery)
@@ -365,18 +365,18 @@ class AwsCloudMapPeerListProviderTest {
      *
      * @param objectUnderTest The object to wait for.
      */
-    private void waitUntilPeerListPopulated(AwsCloudMapPeerListProvider objectUnderTest) {
+    private void waitUntilPeerListPopulated(final AwsCloudMapPeerListProvider objectUnderTest) {
         Awaitility.waitAtMost(1, TimeUnit.SECONDS)
                 .pollDelay(100, TimeUnit.MILLISECONDS)
                 .untilAsserted(() -> {
-                    List<String> actualPeers = objectUnderTest.getPeerList();
+                    final List<String> actualPeers = objectUnderTest.getPeerList();
                     assertThat(actualPeers, notNullValue());
                     assertThat(actualPeers.size(), greaterThan(0));
                 });
     }
 
     private static String generateRandomIp() {
-        Random random = new Random();
+        final Random random = new Random();
 
         return IntStream.range(0, 4)
                 .map(i -> random.nextInt(255))

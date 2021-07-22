@@ -48,7 +48,7 @@ class AwsCloudMapPeerListProvider_CreateTest {
 
     @Test
     void create_with_valid_configurations() {
-        PeerListProvider result = AwsCloudMapPeerListProvider.create(pluginSetting, pluginMetrics);
+        final PeerListProvider result = AwsCloudMapPeerListProvider.create(pluginSetting, pluginMetrics);
 
         assertThat(result, instanceOf(AwsCloudMapPeerListProvider.class));
     }
@@ -59,7 +59,7 @@ class AwsCloudMapPeerListProvider_CreateTest {
             PeerForwarderConfig.AWS_CLOUD_MAP_SERVICE_NAME,
             PeerForwarderConfig.AWS_REGION
     })
-    void create_with_missing_required_property(String propertyToRemove) {
+    void create_with_missing_required_property(final String propertyToRemove) {
         pluginSetting.getSettings().remove(propertyToRemove);
 
         assertThrows(NullPointerException.class,
@@ -69,18 +69,17 @@ class AwsCloudMapPeerListProvider_CreateTest {
 
     @ParameterizedTest
     @ArgumentsSource(AllRegionsArgumentProvider.class)
-    void create_with_all_current_regions(Region region) {
+    void create_with_all_current_regions(final Region region) {
         pluginSetting.getSettings().put(PeerForwarderConfig.AWS_REGION, region.toString());
 
-        PeerListProvider result = AwsCloudMapPeerListProvider.create(pluginSetting, pluginMetrics);
+        final PeerListProvider result = AwsCloudMapPeerListProvider.create(pluginSetting, pluginMetrics);
 
         assertThat(result, instanceOf(AwsCloudMapPeerListProvider.class));
     }
 
     static class AllRegionsArgumentProvider implements ArgumentsProvider {
-
         @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+        public Stream<? extends Arguments> provideArguments(final ExtensionContext context) {
             return Region.regions().stream().map(Arguments::of);
         }
     }

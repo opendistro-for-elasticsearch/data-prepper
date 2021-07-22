@@ -32,6 +32,10 @@ import java.util.stream.Collectors;
 class AwsCloudMapPeerListProvider implements PeerListProvider, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(AwsCloudMapPeerListProvider.class);
+    private static final int ONE_SECOND = 1000;
+    private static final int TWENTY_SECONDS = 32000;
+    private static final double TWENTY_PERCENT = 0.2;
+    private static final String INSTANCE_IP4_ATTRIBUTE_NAME = "AWS_INSTANCE_IPV4";
 
     private final ServiceDiscoveryAsyncClient awsServiceDiscovery;
     private final String namespaceName;
@@ -43,19 +47,19 @@ class AwsCloudMapPeerListProvider implements PeerListProvider, AutoCloseable {
     private final String domainName;
 
     AwsCloudMapPeerListProvider(
-            ServiceDiscoveryAsyncClient awsServiceDiscovery,
-            String namespaceName,
-            String serviceName,
-            int timeToRefreshSeconds,
-            Backoff backoff,
-            PluginMetrics pluginMetrics) {
+            final ServiceDiscoveryAsyncClient awsServiceDiscovery,
+            final String namespaceName,
+            final String serviceName,
+            final int timeToRefreshSeconds,
+            final Backoff backoff,
+            final PluginMetrics pluginMetrics) {
         this.awsServiceDiscovery = Objects.requireNonNull(awsServiceDiscovery);
         this.namespaceName = Objects.requireNonNull(namespaceName);
         this.serviceName = Objects.requireNonNull(serviceName);
         this.timeToRefreshSeconds = timeToRefreshSeconds;
         this.backoff = Objects.requireNonNull(backoff);
 
-        if(timeToRefreshSeconds < 1)
+        if (timeToRefreshSeconds < 1)
             throw new IllegalArgumentException("timeToRefreshSeconds must be positive. Actual: " + timeToRefreshSeconds);
 
         eventLoop = CommonPools.workerGroup().next();
@@ -69,17 +73,15 @@ class AwsCloudMapPeerListProvider implements PeerListProvider, AutoCloseable {
         pluginMetrics.gauge(PEER_ENDPOINTS, endpointGroup, group -> group.endpoints().size());
     }
 
-    static AwsCloudMapPeerListProvider create(PluginSetting pluginSetting, PluginMetrics pluginMetrics) {
+    static AwsCloudMapPeerListProvider create(final PluginSetting pluginSetting, final PluginMetrics pluginMetrics) {
+        final String awsRegion = getRequiredSettingString(pluginSetting, PeerForwarderConfig.AWS_REGION);
+        final String namespace = getRequiredSettingString(pluginSetting, PeerForwarderConfig.AWS_CLOUD_MAP_NAMESPACE_NAME);
+        final String serviceName = getRequiredSettingString(pluginSetting, PeerForwarderConfig.AWS_CLOUD_MAP_SERVICE_NAME);
 
-        String awsRegion = getRequiredSettingString(pluginSetting, PeerForwarderConfig.AWS_REGION);
-        String namespace = getRequiredSettingString(pluginSetting, PeerForwarderConfig.AWS_CLOUD_MAP_NAMESPACE_NAME);
-        String serviceName = getRequiredSettingString(pluginSetting, PeerForwarderConfig.AWS_CLOUD_MAP_SERVICE_NAME);
+        final Backoff standardBackoff = Backoff.exponential(ONE_SECOND, TWENTY_SECONDS).withJitter(TWENTY_PERCENT);
+        final int timeToRefreshSeconds = 20;
 
-
-        Backoff standardBackoff = Backoff.exponential(1000, 32000).withJitter(0.2);
-        int timeToRefreshSeconds = 20;
-
-        ServiceDiscoveryAsyncClient serviceDiscoveryAsyncClient = ServiceDiscoveryAsyncClient
+        final ServiceDiscoveryAsyncClient serviceDiscoveryAsyncClient = ServiceDiscoveryAsyncClient
                 .builder()
                 .region(Region.of(awsRegion))
                 .credentialsProvider(DefaultCredentialsProvider.create())
@@ -94,14 +96,13 @@ class AwsCloudMapPeerListProvider implements PeerListProvider, AutoCloseable {
                 pluginMetrics);
     }
 
-    private static String getRequiredSettingString(PluginSetting pluginSetting, String propertyName) {
-        String domainName = pluginSetting.getStringOrDefault(propertyName, null);
-        return Objects.requireNonNull(domainName, String.format("Missing '%s' configuration value", propertyName));
+    private static String getRequiredSettingString(final PluginSetting pluginSetting, final String propertyName) {
+        final String propertyValue = pluginSetting.getStringOrDefault(propertyName, null);
+        return Objects.requireNonNull(propertyValue, String.format("Missing '%s' configuration value", propertyName));
     }
 
     @Override
     public List<String> getPeerList() {
-
         return endpointGroup.endpoints()
                 .stream()
                 .map(Endpoint::ipAddr)
@@ -109,17 +110,13 @@ class AwsCloudMapPeerListProvider implements PeerListProvider, AutoCloseable {
     }
 
     @Override
-    public void addListener(Consumer<? super List<Endpoint>> listener) {
-
+    public void addListener(final Consumer<? super List<Endpoint>> listener) {
         endpointGroup.addListener(listener);
-
     }
 
     @Override
-    public void removeListener(Consumer<?> listener) {
-
+    public void removeListener(final Consumer<?> listener) {
         endpointGroup.removeListener(listener);
-
     }
 
     @Override
@@ -146,7 +143,7 @@ class AwsCloudMapPeerListProvider implements PeerListProvider, AutoCloseable {
                 return;
             }
 
-            DiscoverInstancesRequest discoverInstancesRequest = DiscoverInstancesRequest
+            final DiscoverInstancesRequest discoverInstancesRequest = DiscoverInstancesRequest
                     .builder()
                     .namespaceName(namespaceName)
                     .serviceName(serviceName)
@@ -156,20 +153,19 @@ class AwsCloudMapPeerListProvider implements PeerListProvider, AutoCloseable {
 
             awsServiceDiscovery.discoverInstances(discoverInstancesRequest).whenComplete(
                     (discoverInstancesResponse, throwable) -> {
-                        if(discoverInstancesResponse != null) {
+                        if (discoverInstancesResponse != null) {
                             try {
                                 failedAttemptCount = 0;
                                 updateEndpointsWithDiscoveredInstances(discoverInstancesResponse);
-                            } catch (Throwable ex) {
+                            } catch (final Throwable ex) {
                                 LOG.warn("Failed to update endpoints.", ex);
-                            }
-                            finally {
+                            } finally {
                                 scheduledDiscovery = eventLoop.schedule(this::discoverInstances,
                                         timeToRefreshSeconds, TimeUnit.SECONDS);
                             }
                         }
 
-                        if(throwable != null) {
+                        if (throwable != null) {
                             failedAttemptCount++;
                             final long delayMillis = backoff.nextDelayMillis(failedAttemptCount);
                             LOG.error("Failed to discover instances for: namespace='{}', serviceName='{}'. Will retry in {} ms.",
@@ -178,19 +174,18 @@ class AwsCloudMapPeerListProvider implements PeerListProvider, AutoCloseable {
                             scheduledDiscovery = eventLoop.schedule(this::discoverInstances,
                                     delayMillis, TimeUnit.MILLISECONDS);
                         }
-
                     });
         }
 
-        private void updateEndpointsWithDiscoveredInstances(DiscoverInstancesResponse discoverInstancesResponse) {
-            List<HttpInstanceSummary> instances = discoverInstancesResponse.instances();
+        private void updateEndpointsWithDiscoveredInstances(final DiscoverInstancesResponse discoverInstancesResponse) {
+            final List<HttpInstanceSummary> instances = discoverInstancesResponse.instances();
 
             LOG.info("Discovered {} instances.", instances.size());
 
-            List<Endpoint> endpoints = instances
+            final List<Endpoint> endpoints = instances
                     .stream()
                     .map(HttpInstanceSummary::attributes)
-                    .map(attributes -> attributes.get("AWS_INSTANCE_IPV4"))
+                    .map(attributes -> attributes.get(INSTANCE_IP4_ATTRIBUTE_NAME))
                     .map(ip -> Endpoint.of(domainName).withIpAddr(ip))
                     .collect(Collectors.toList());
 
@@ -198,7 +193,7 @@ class AwsCloudMapPeerListProvider implements PeerListProvider, AutoCloseable {
         }
 
         @Override
-        protected void doCloseAsync(CompletableFuture<?> future) {
+        protected void doCloseAsync(final CompletableFuture<?> future) {
             final ScheduledFuture<?> scheduledDiscovery = this.scheduledDiscovery;
             if (scheduledDiscovery != null) {
                 scheduledDiscovery.cancel(true);

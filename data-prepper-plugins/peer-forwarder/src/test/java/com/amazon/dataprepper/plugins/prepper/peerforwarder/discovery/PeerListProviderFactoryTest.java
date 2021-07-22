@@ -34,12 +34,14 @@ class PeerListProviderFactoryTest {
     @BeforeEach
     void setup() {
         factory = new PeerListProviderFactory();
-        pluginSetting = new PluginSetting(PLUGIN_NAME, new HashMap<>()){{ setPipelineName(PIPELINE_NAME); }};
+        pluginSetting = new PluginSetting(PLUGIN_NAME, new HashMap<>()) {{
+            setPipelineName(PIPELINE_NAME);
+        }};
     }
 
     @Test
     void createProvider_throws_when_no_DiscoveryMode_is_provided() {
-        assertThrows(NullPointerException.class, 
+        assertThrows(NullPointerException.class,
                 () -> factory.createProvider(pluginSetting));
     }
 
@@ -53,15 +55,15 @@ class PeerListProviderFactoryTest {
 
     @ParameterizedTest
     @EnumSource(DiscoveryMode.class)
-    void createProvider_returns_correct_provider_for_all_DiscoveryModes(DiscoveryMode discoveryMode) {
-        String discoveryModeString = discoveryMode.toString();
+    void createProvider_returns_correct_provider_for_all_DiscoveryModes(final DiscoveryMode discoveryMode) {
+        final String discoveryModeString = discoveryMode.toString();
         pluginSetting.getSettings().put(PeerForwarderConfig.DISCOVERY_MODE, discoveryModeString.toLowerCase());
 
-        PeerListProvider expectedProvider = mock(PeerListProvider.class);
-        PeerListProvider actualProvider;
+        final PeerListProvider expectedProvider = mock(PeerListProvider.class);
+        final PeerListProvider actualProvider;
 
-        try(MockedStatic<DiscoveryMode> enumMock = Mockito.mockStatic(DiscoveryMode.class)) {
-            DiscoveryMode mockedModeEnum = mock(DiscoveryMode.class);
+        try (final MockedStatic<DiscoveryMode> enumMock = Mockito.mockStatic(DiscoveryMode.class)) {
+            final DiscoveryMode mockedModeEnum = mock(DiscoveryMode.class);
             enumMock.when(() -> DiscoveryMode.valueOf(discoveryModeString)).thenReturn(mockedModeEnum);
 
             when(mockedModeEnum.create(eq(pluginSetting), any(PluginMetrics.class))).thenReturn(expectedProvider);
