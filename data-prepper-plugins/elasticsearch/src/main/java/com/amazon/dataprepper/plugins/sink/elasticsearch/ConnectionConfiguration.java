@@ -87,6 +87,22 @@ public class ConnectionConfiguration {
     return awsRegion;
   }
 
+  public String getAwsStsRole() {
+    return awsStsRole;
+  }
+
+  public Path getCertPath() {
+    return certPath;
+  }
+
+  public Integer getSocketTimeout() {
+    return socketTimeout;
+  }
+
+  public Integer getConnectTimeout() {
+    return connectTimeout;
+  }
+
   private ConnectionConfiguration(final Builder builder) {
     this.hosts = builder.hosts;
     this.username = builder.username;
@@ -98,14 +114,6 @@ public class ConnectionConfiguration {
     this.awsSigv4 = builder.awsSigv4;
     this.awsRegion = builder.awsRegion;
     this.awsStsRole = builder.awsStsRole;
-  }
-
-  public Integer getSocketTimeout() {
-    return socketTimeout;
-  }
-
-  public Integer getConnectTimeout() {
-    return connectTimeout;
   }
 
   public static ConnectionConfiguration readConnectionConfiguration(final PluginSetting pluginSetting){
@@ -144,14 +152,6 @@ public class ConnectionConfiguration {
       builder = builder.withInsecure(insecure);
     }
     return builder.build();
-  }
-
-  public String getAwsStsRole() {
-    return awsStsRole;
-  }
-
-  public Path getCertPath() {
-    return certPath;
   }
 
   public RestHighLevelClient createClient() {
