@@ -366,7 +366,7 @@ class AwsCloudMapPeerListProviderTest {
      * @param objectUnderTest The object to wait for.
      */
     private void waitUntilPeerListPopulated(final AwsCloudMapPeerListProvider objectUnderTest) {
-        Awaitility.waitAtMost(1, TimeUnit.SECONDS)
+        Awaitility.waitAtMost(2, TimeUnit.SECONDS)
                 .pollDelay(100, TimeUnit.MILLISECONDS)
                 .untilAsserted(() -> {
                     final List<String> actualPeers = objectUnderTest.getPeerList();
