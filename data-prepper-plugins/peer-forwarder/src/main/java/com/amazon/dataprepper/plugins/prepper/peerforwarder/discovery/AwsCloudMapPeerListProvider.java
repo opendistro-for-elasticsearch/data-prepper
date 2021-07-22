@@ -8,6 +8,7 @@ import com.linecorp.armeria.client.endpoint.DynamicEndpointGroup;
 import com.linecorp.armeria.client.retry.Backoff;
 import com.linecorp.armeria.common.CommonPools;
 import io.netty.channel.EventLoop;
+import io.netty.util.concurrent.ScheduledFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
@@ -19,6 +20,7 @@ import software.amazon.awssdk.services.servicediscovery.model.HttpInstanceSummar
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -27,7 +29,7 @@ import java.util.stream.Collectors;
  * Implementation of {@link PeerListProvider} which uses AWS CloudMap's
  * service discovery capability to discover peers.
  */
-class AwsCloudMapPeerListProvider implements PeerListProvider {
+class AwsCloudMapPeerListProvider implements PeerListProvider, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(AwsCloudMapPeerListProvider.class);
 
@@ -120,6 +122,11 @@ class AwsCloudMapPeerListProvider implements PeerListProvider {
 
     }
 
+    @Override
+    public void close() {
+        endpointGroup.close();
+    }
+
     /**
      * The {@link DynamicEndpointGroup} class serves as a useful base class for updating
      * endpoints by supporting the endpoint observer pattern for us. We just need to
@@ -128,6 +135,7 @@ class AwsCloudMapPeerListProvider implements PeerListProvider {
     private class AwsCloudMapDynamicEndpointGroup extends DynamicEndpointGroup {
 
         private int failedAttemptCount = 0;
+        private volatile ScheduledFuture<?> scheduledDiscovery;
 
         private AwsCloudMapDynamicEndpointGroup() {
             eventLoop.execute(this::discoverInstances);
@@ -156,7 +164,7 @@ class AwsCloudMapPeerListProvider implements PeerListProvider {
                                 LOG.warn("Failed to update endpoints.", ex);
                             }
                             finally {
-                                eventLoop.schedule(this::discoverInstances,
+                                scheduledDiscovery = eventLoop.schedule(this::discoverInstances,
                                         timeToRefreshSeconds, TimeUnit.SECONDS);
                             }
                         }
@@ -167,7 +175,7 @@ class AwsCloudMapPeerListProvider implements PeerListProvider {
                             LOG.error("Failed to discover instances for: namespace='{}', serviceName='{}'. Will retry in {} ms.",
                                     namespaceName, serviceName, delayMillis, throwable);
 
-                            eventLoop.schedule(this::discoverInstances,
+                            scheduledDiscovery = eventLoop.schedule(this::discoverInstances,
                                     delayMillis, TimeUnit.MILLISECONDS);
                         }
 
@@ -189,5 +197,14 @@ class AwsCloudMapPeerListProvider implements PeerListProvider {
             setEndpoints(endpoints);
         }
 
+        @Override
+        protected void doCloseAsync(CompletableFuture<?> future) {
+            final ScheduledFuture<?> scheduledDiscovery = this.scheduledDiscovery;
+            if (scheduledDiscovery != null) {
+                scheduledDiscovery.cancel(true);
+            }
+
+            future.complete(null);
+        }
     }
 }
