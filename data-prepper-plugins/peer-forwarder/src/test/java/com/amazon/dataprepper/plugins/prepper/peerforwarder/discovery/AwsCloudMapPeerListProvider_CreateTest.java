@@ -47,8 +47,8 @@ class AwsCloudMapPeerListProvider_CreateTest {
     }
 
     @Test
-    void create_with_valid_configurations() {
-        final PeerListProvider result = AwsCloudMapPeerListProvider.create(pluginSetting, pluginMetrics);
+    void createPeerListProvider_with_valid_configurations() {
+        final PeerListProvider result = AwsCloudMapPeerListProvider.createPeerListProvider(pluginSetting, pluginMetrics);
 
         assertThat(result, instanceOf(AwsCloudMapPeerListProvider.class));
     }
@@ -59,20 +59,20 @@ class AwsCloudMapPeerListProvider_CreateTest {
             PeerForwarderConfig.AWS_CLOUD_MAP_SERVICE_NAME,
             PeerForwarderConfig.AWS_REGION
     })
-    void create_with_missing_required_property(final String propertyToRemove) {
+    void createPeerListProvider_with_missing_required_property(final String propertyToRemove) {
         pluginSetting.getSettings().remove(propertyToRemove);
 
         assertThrows(NullPointerException.class,
-                () -> AwsCloudMapPeerListProvider.create(pluginSetting, pluginMetrics));
+                () -> AwsCloudMapPeerListProvider.createPeerListProvider(pluginSetting, pluginMetrics));
 
     }
 
     @ParameterizedTest
     @ArgumentsSource(AllRegionsArgumentProvider.class)
-    void create_with_all_current_regions(final Region region) {
+    void createPeerListProvider_with_all_current_regions(final Region region) {
         pluginSetting.getSettings().put(PeerForwarderConfig.AWS_REGION, region.toString());
 
-        final PeerListProvider result = AwsCloudMapPeerListProvider.create(pluginSetting, pluginMetrics);
+        final PeerListProvider result = AwsCloudMapPeerListProvider.createPeerListProvider(pluginSetting, pluginMetrics);
 
         assertThat(result, instanceOf(AwsCloudMapPeerListProvider.class));
     }

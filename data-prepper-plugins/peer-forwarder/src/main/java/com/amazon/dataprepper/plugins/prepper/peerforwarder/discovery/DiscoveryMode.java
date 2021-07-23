@@ -7,9 +7,9 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 
 public enum DiscoveryMode {
-    STATIC(StaticPeerListProvider::create),
-    DNS(DnsPeerListProvider::create),
-    AWS_CLOUD_MAP(AwsCloudMapPeerListProvider::create);
+    STATIC(StaticPeerListProvider::createPeerListProvider),
+    DNS(DnsPeerListProvider::createPeerListProvider),
+    AWS_CLOUD_MAP(AwsCloudMapPeerListProvider::createPeerListProvider);
 
     private final BiFunction<PluginSetting, PluginMetrics, PeerListProvider> creationFunction;
 

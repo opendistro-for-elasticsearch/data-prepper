@@ -64,7 +64,7 @@ class DnsPeerListProvider_CreateTest {
         try (MockedStatic<DnsAddressEndpointGroup> armeriaMock = Mockito.mockStatic(DnsAddressEndpointGroup.class)) {
             armeriaMock.when(() -> DnsAddressEndpointGroup.builder(anyString())).thenReturn(dnsAddressEndpointGroupBuilder);
 
-            PeerListProvider result = DnsPeerListProvider.create(pluginSetting, pluginMetrics);
+            PeerListProvider result = DnsPeerListProvider.createPeerListProvider(pluginSetting, pluginMetrics);
 
             assertThat(result, instanceOf(DnsPeerListProvider.class));
         }
@@ -73,7 +73,7 @@ class DnsPeerListProvider_CreateTest {
     @Test
     void testCreateProviderDnsInstanceWithNoHostname() {
         assertThrows(NullPointerException.class,
-                () -> DnsPeerListProvider.create(pluginSetting, pluginMetrics));
+                () -> DnsPeerListProvider.createPeerListProvider(pluginSetting, pluginMetrics));
 
     }
 
@@ -82,7 +82,7 @@ class DnsPeerListProvider_CreateTest {
         pluginSetting.getSettings().put(PeerForwarderConfig.DOMAIN_NAME, INVALID_ENDPOINT);
 
         assertThrows(IllegalStateException.class,
-                () -> DnsPeerListProvider.create(pluginSetting, pluginMetrics));
+                () -> DnsPeerListProvider.createPeerListProvider(pluginSetting, pluginMetrics));
     }
 
 }

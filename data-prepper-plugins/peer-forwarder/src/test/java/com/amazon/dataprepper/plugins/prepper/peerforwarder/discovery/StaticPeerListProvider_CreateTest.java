@@ -38,14 +38,14 @@ class StaticPeerListProvider_CreateTest {
     void testCreateProviderStaticInstanceNoEndpoints() {
 
         assertThrows(NullPointerException.class,
-                () -> StaticPeerListProvider.create(pluginSetting, pluginMetrics));
+                () -> StaticPeerListProvider.createPeerListProvider(pluginSetting, pluginMetrics));
     }
 
     @Test
     void testCreateProviderStaticInstanceWithEndpoints() {
         pluginSetting.getSettings().put(PeerForwarderConfig.STATIC_ENDPOINTS, Collections.singletonList(ENDPOINT));
 
-        PeerListProvider result = StaticPeerListProvider.create(pluginSetting, pluginMetrics);
+        PeerListProvider result = StaticPeerListProvider.createPeerListProvider(pluginSetting, pluginMetrics);
 
         assertThat(result, instanceOf(StaticPeerListProvider.class));
         assertEquals(1, result.getPeerList().size());
@@ -57,7 +57,7 @@ class StaticPeerListProvider_CreateTest {
         pluginSetting.getSettings().put(PeerForwarderConfig.STATIC_ENDPOINTS, Arrays.asList(ENDPOINT, INVALID_ENDPOINT));
 
         assertThrows(IllegalStateException.class,
-                () -> StaticPeerListProvider.create(pluginSetting, pluginMetrics));
+                () -> StaticPeerListProvider.createPeerListProvider(pluginSetting, pluginMetrics));
     }
 
 }

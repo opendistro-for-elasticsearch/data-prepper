@@ -40,7 +40,7 @@ public class DnsPeerListProvider implements PeerListProvider {
         pluginMetrics.gauge(PEER_ENDPOINTS, endpointGroup, group -> group.endpoints().size());
     }
 
-    static DnsPeerListProvider create(PluginSetting pluginSetting, PluginMetrics pluginMetrics) {
+    static DnsPeerListProvider createPeerListProvider(PluginSetting pluginSetting, PluginMetrics pluginMetrics) {
         final String domainName = pluginSetting.getStringOrDefault(PeerForwarderConfig.DOMAIN_NAME, null);
         Objects.requireNonNull(domainName, String.format("Missing '%s' configuration value",PeerForwarderConfig. DOMAIN_NAME));
         Preconditions.checkState(validateEndpoint(domainName), "Invalid domain name: %s", domainName);

@@ -34,7 +34,7 @@ public class StaticPeerListProvider implements PeerListProvider {
         pluginMetrics.gauge(PEER_ENDPOINTS, endpoints, List::size);
     }
 
-    static StaticPeerListProvider create(PluginSetting pluginSetting, PluginMetrics pluginMetrics) {
+    static StaticPeerListProvider createPeerListProvider(PluginSetting pluginSetting, PluginMetrics pluginMetrics) {
         final List<String> endpoints = (List<String>) pluginSetting.getAttributeOrDefault(PeerForwarderConfig.STATIC_ENDPOINTS, null);
         Objects.requireNonNull(endpoints, String.format("Missing '%s' configuration value", PeerForwarderConfig.STATIC_ENDPOINTS));
         final List<String> invalidEndpoints = endpoints.stream().filter(endpoint -> !DiscoveryUtils.validateEndpoint(endpoint)).collect(Collectors.toList());

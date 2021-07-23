@@ -46,6 +46,7 @@ import static org.mockito.Mockito.mock;
 
 class AwsCloudMapPeerListProviderTest {
 
+    public static final int WAIT_TIME_MULTIPLIER_MILLIS = 1200;
     private ServiceDiscoveryAsyncClient awsServiceDiscovery;
     private String namespaceName;
     private String serviceName;
@@ -351,7 +352,7 @@ class AwsCloudMapPeerListProviderTest {
      * @param timesCalled The number of times to wait for it to be called.
      */
     private void waitUntilDiscoverInstancesCalledAtLeast(final int timesCalled) {
-        final long waitTimeMillis = (long) (timesCalled * 1000 * 1.2);
+        final long waitTimeMillis = (long) timesCalled * WAIT_TIME_MULTIPLIER_MILLIS;
         Awaitility.waitAtMost(waitTimeMillis, TimeUnit.MILLISECONDS)
                 .pollDelay(100, TimeUnit.MILLISECONDS)
                 .untilAsserted(() -> then(awsServiceDiscovery)

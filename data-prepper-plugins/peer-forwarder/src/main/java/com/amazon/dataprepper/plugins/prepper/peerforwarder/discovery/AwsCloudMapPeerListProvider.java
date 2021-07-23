@@ -73,7 +73,7 @@ class AwsCloudMapPeerListProvider implements PeerListProvider, AutoCloseable {
         pluginMetrics.gauge(PEER_ENDPOINTS, endpointGroup, group -> group.endpoints().size());
     }
 
-    static AwsCloudMapPeerListProvider create(final PluginSetting pluginSetting, final PluginMetrics pluginMetrics) {
+    static AwsCloudMapPeerListProvider createPeerListProvider(final PluginSetting pluginSetting, final PluginMetrics pluginMetrics) {
         final String awsRegion = getRequiredSettingString(pluginSetting, PeerForwarderConfig.AWS_REGION);
         final String namespace = getRequiredSettingString(pluginSetting, PeerForwarderConfig.AWS_CLOUD_MAP_NAMESPACE_NAME);
         final String serviceName = getRequiredSettingString(pluginSetting, PeerForwarderConfig.AWS_CLOUD_MAP_SERVICE_NAME);
