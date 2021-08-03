@@ -1,21 +1,15 @@
 package com.amazon.dataprepper.plugins.prepper.geoip.provider;
+
 import com.amazon.dataprepper.model.configuration.PluginSetting;
-import com.amazon.dataprepper.plugins.prepper.geoip.GeoIPPrepperConfig;
+import com.amazon.dataprepper.plugins.prepper.geoip.GeoIpPrepperConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.internal.matchers.apachecommons.ReflectionEquals;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
-
-@ExtendWith(MockitoExtension.class)
 public class GeoIpProviderFactoryTest {
 
     private static final String TEST_DATABASE_PATH = "./src/test/resources/GeoLite2-City-Test.mmdb";
@@ -30,33 +24,32 @@ public class GeoIpProviderFactoryTest {
         pluginSetting = new PluginSetting(
                 "geoip",
                 new HashMap<String, Object>() {{
-                    put(GeoIPPrepperConfig.DATABASE_PATH, TEST_DATABASE_PATH);
+                    put(GeoIpPrepperConfig.DATABASE_PATH, TEST_DATABASE_PATH);
                 }}
         );
     }
 
 
     @Test
-    void createGeoIpProvider_throws_when_no_provider_is_provided() {
+    void testCreateGeoIpProviderThrowsWhenNoProviderIsProvided() {
         assertThrows(NullPointerException.class,
                 () -> factory.createGeoIpProvider(pluginSetting));
     }
 
     @Test
-    void createGeoIpProvider_throws_for_undefined_provider() {
+    void testCreateGeoIpProviderThrowsForUndefinedProvider() {
         // Api lookup is currently unsupported.
-        pluginSetting.getSettings().put(GeoIPPrepperConfig.DATA_SOURCE, DataSource.MaxMindApiCityDatabase.toString());
+        pluginSetting.getSettings().put(GeoIpPrepperConfig.DATA_SOURCE, DataSource.MaxMindApiCityDatabase.toString());
 
         assertThrows(UnsupportedOperationException.class,
                 () -> factory.createGeoIpProvider(pluginSetting));
     }
 
     @Test
-    void createGeoIpProvider_creates_MaxMind_provider() {
-        pluginSetting.getSettings().put(GeoIPPrepperConfig.DATA_SOURCE, DataSource.MaxMindGeolite2CityDatabase.toString());
-        GeoIpProvider expected = new MaxMindGeoIpProvider(pluginSetting);
+    void testCreateGeoIpProviderCreatesMaxMindProvider() {
+        pluginSetting.getSettings().put(GeoIpPrepperConfig.DATA_SOURCE, DataSource.MaxMindGeolite2CityDatabase.toString());
         GeoIpProvider actual = factory.createGeoIpProvider(pluginSetting);
 
-        assertTrue(new ReflectionEquals(actual,"databaseReader").matches(expected));
+        assertTrue(actual instanceof MaxMindGeoIpProvider);
     }
 }

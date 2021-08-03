@@ -1,7 +1,8 @@
 package com.amazon.dataprepper.plugins.prepper.geoip;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -9,9 +10,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 
 public class IpParserTest {
@@ -28,25 +29,28 @@ public class IpParserTest {
         ipParser = new IpParser();
         document = buildDocumentFromJsonFile(TEST_DOCUMENT_IP_FIELD_PRESENT_JSON_FILE);
     }
+
     @Test
     public void testIpParser() {
-        Assert.assertTrue(ipParser.getIpFromJSON(document, IP_FIELD).equals(DESIRED_IP));
-    }
-    @Test
-    public void testIpParserMissingField() {
-        Assert.assertTrue(ipParser.getIpFromJSON(document, MISSING_FIELD) == null);
+        Optional<String> ip = ipParser.getIpFromJson(document, IP_FIELD);
+        Assertions.assertTrue(ip.isPresent());
+        Assertions.assertEquals(DESIRED_IP, ip.get());
     }
 
-    private Map<String, Object> buildDocumentFromJsonFile(String jsonFileName) throws IOException{
+    @Test
+    public void testIpParserMissingField() {
+        Assertions.assertFalse(ipParser.getIpFromJson(document, MISSING_FIELD).isPresent());
+    }
+
+    private Map<String, Object> buildDocumentFromJsonFile(String jsonFileName) throws IOException {
         final StringBuilder jsonBuilder = new StringBuilder();
         try (final InputStream inputStream = Objects.requireNonNull(
-                getClass().getClassLoader().getResourceAsStream(jsonFileName))){
+                getClass().getClassLoader().getResourceAsStream(jsonFileName))) {
             final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             bufferedReader.lines().forEach(jsonBuilder::append);
         }
         final String documentJson = jsonBuilder.toString();
-        Map<String, Object> response = new ObjectMapper().readValue(documentJson, HashMap.class);
-        return response;
-
+        return new ObjectMapper().readValue(documentJson, new TypeReference<Map<String, Object>>() {
+        });
     }
 }
