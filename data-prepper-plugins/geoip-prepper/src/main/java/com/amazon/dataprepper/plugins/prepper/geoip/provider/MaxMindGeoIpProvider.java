@@ -39,7 +39,7 @@ public class MaxMindGeoIpProvider implements GeoIpProvider {
     }
 
     @Override
-    public final Optional<LocationData> getDataFromIp(String IpAddress) {
+    public final Optional<LocationData> getDataFromIp(final String IpAddress) {
         try {
             final InetAddress ipAddress = InetAddress.getByName(IpAddress);
             final CityResponse response = databaseReader.city(ipAddress);

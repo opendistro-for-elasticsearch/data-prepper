@@ -16,7 +16,7 @@ public class IpParser {
      * @param targetField The field in which to extract the data.
      * @return String with the IP Address from the targetField.
      */
-    public Optional<String> getIpFromJson(Map<String, Object> Data, String targetField) {
+    public Optional<String> getIpFromJson(final Map<String, Object> Data, final String targetField) {
         return Optional.ofNullable((String) Data.get(targetField));
         //TODO Check this value looks like an IP address before sending.
     }

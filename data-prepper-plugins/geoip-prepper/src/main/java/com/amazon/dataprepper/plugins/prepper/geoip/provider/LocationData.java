@@ -11,10 +11,10 @@ public class LocationData {
     private final String subdivisionName;
     private final String cityName;
 
-    public LocationData(String country, String subdivision, String city) {
-        countryName = country;
-        subdivisionName = subdivision;
-        cityName = city;
+    public LocationData(String countryName, String subdivisionName, String cityName) {
+        this.countryName = countryName;
+        this.subdivisionName = subdivisionName;
+        this.cityName = cityName;
     }
 
     @Override

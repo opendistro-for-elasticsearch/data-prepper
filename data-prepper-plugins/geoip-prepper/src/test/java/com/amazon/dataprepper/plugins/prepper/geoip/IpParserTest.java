@@ -31,7 +31,7 @@ public class IpParserTest {
     }
 
     @Test
-    public void testIpParser() {
+    public void testGetIpFromJsonSuccess() {
         Optional<String> ip = ipParser.getIpFromJson(document, IP_FIELD);
         Assertions.assertTrue(ip.isPresent());
         Assertions.assertEquals(DESIRED_IP, ip.get());

@@ -37,46 +37,55 @@ public class GeoIpPrepper extends AbstractPrepper<Record<String>, Record<String>
     public GeoIpPrepper(final PluginSetting pluginSetting) {
         super(pluginSetting);
         Objects.requireNonNull(pluginSetting);
-        targetField = pluginSetting.getStringOrDefault(GeoIpPrepperConfig.TARGET_FIELD, null);
+        targetField = (String) pluginSetting.getAttributeFromSettings(GeoIpPrepperConfig.TARGET_FIELD);
+        Objects.requireNonNull(targetField);
         locationField = pluginSetting.getStringOrDefault(GeoIpPrepperConfig.LOCATION_FIELD, GeoIpPrepperConfig.DEFAULT_LOCATION_FIELD);
         provider = new GeoIpProviderFactory().createGeoIpProvider(pluginSetting);
         parser = new IpParser();
     }
+
     //
-    GeoIpPrepper(final PluginSetting pluginSetting, final GeoIpProvider testProvider) {
+    GeoIpPrepper(final PluginSetting pluginSetting, final GeoIpProvider geoIpProvider) {
         // accessible only in the same package for unit test
         super(pluginSetting);
-        provider = testProvider;
+        provider = geoIpProvider;
         parser = new IpParser();
-        targetField = pluginSetting.getStringOrDefault(GeoIpPrepperConfig.TARGET_FIELD, null);
+        targetField = (String) pluginSetting.getAttributeFromSettings(GeoIpPrepperConfig.TARGET_FIELD);
+        Objects.requireNonNull(targetField);
         locationField = pluginSetting.getStringOrDefault(GeoIpPrepperConfig.LOCATION_FIELD, GeoIpPrepperConfig.DEFAULT_LOCATION_FIELD);
     }
 
     /**
-     * execute the prepper logic which could potentially modify the incoming record. The level to which the record has
-     * been modified depends on the implementation
+     * Execute the prepper logic. Records are input as rawSpans in a json string form.
+     * Ip address is extracted from a target field defined in the pluginSetting, and looked up using a geo Ip provider
+     * defined by the pluginSetting. Then, data is attached to the document, in a field defined by the pluginSetting.
      *
      * @param rawSpanStringRecords Input records that will be modified/processed
      * @return Record  modified output records
      */
     @Override
-    public Collection<Record<String>> doExecute(Collection<Record<String>> rawSpanStringRecords) {
+    public Collection<Record<String>> doExecute(final Collection<Record<String>> rawSpanStringRecords) {
         final List<Record<String>> recordsOut = new LinkedList<>();
         for (Record<String> record : rawSpanStringRecords) {
             try {
                 final Map<String, Object> rawSpanMap = OBJECT_MAPPER.readValue(record.getData(), MAP_TYPE_REFERENCE);
 
                 final Optional<String> foundIp = parser.getIpFromJson(rawSpanMap, targetField);
-
                 if (foundIp.isPresent()) {
                     final Optional<LocationData> foundData = provider.getDataFromIp(foundIp.get());
                     //TODO This is a placeholder, how data is attached is still TBD
-                    foundData.ifPresent(locationData -> rawSpanMap.put(locationField, locationData.toString()));
+                    if (foundData.isPresent()) {
+                        rawSpanMap.put(locationField, foundData.get().toString());
+                        final String newData = OBJECT_MAPPER.writeValueAsString(rawSpanMap);
+                        recordsOut.add(new Record<>(newData, record.getMetadata()));
+                        System.out.println(recordsOut);
+                    } else {
+                        recordsOut.add(record);
+                    }
                 } else {
+                    recordsOut.add(record);
                     //TODO Handle no IP returned
                 }
-                final String newData = OBJECT_MAPPER.writeValueAsString(rawSpanMap);
-                recordsOut.add(new Record<>(newData, record.getMetadata()));
             } catch (JsonProcessingException e) {
                 LOG.error("Failed to parse the record: [{}]", record.getData());
             }

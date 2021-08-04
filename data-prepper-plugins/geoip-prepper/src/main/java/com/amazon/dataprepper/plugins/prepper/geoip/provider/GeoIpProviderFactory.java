@@ -14,7 +14,9 @@ public class GeoIpProviderFactory {
         final DataSource provider = DataSource.valueOf(providerString);
         switch (provider) {
             case MaxMindGeolite2CityDatabase:
-                return new MaxMindGeoIpProvider(pluginSetting.getStringOrDefault(GeoIpPrepperConfig.DATABASE_PATH, null));
+                String dbPath = pluginSetting.getStringOrDefault(GeoIpPrepperConfig.DATABASE_PATH, null);
+                Objects.requireNonNull(dbPath);
+                return new MaxMindGeoIpProvider(dbPath);
             default:
                 throw new UnsupportedOperationException(String.format("Unsupported data source: %s", provider));
 
