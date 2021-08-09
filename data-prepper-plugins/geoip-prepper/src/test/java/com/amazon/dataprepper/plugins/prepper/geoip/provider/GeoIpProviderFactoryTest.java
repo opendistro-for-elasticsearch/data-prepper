@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class GeoIpProviderFactoryTest {
 
     private static final String TEST_DATABASE_PATH = "./src/test/resources/GeoLite2-City-Test.mmdb";
+    private static final String[] TEST_DESIRED_FIELDS = {"city_name", "country_name", "location"};
 
     private PluginSetting pluginSetting;
 
@@ -25,6 +26,7 @@ public class GeoIpProviderFactoryTest {
                 "geoip",
                 new HashMap<String, Object>() {{
                     put(GeoIpPrepperConfig.DATABASE_PATH, TEST_DATABASE_PATH);
+                    put(GeoIpPrepperConfig.DESIRED_FIELDS, TEST_DESIRED_FIELDS);
                 }}
         );
     }

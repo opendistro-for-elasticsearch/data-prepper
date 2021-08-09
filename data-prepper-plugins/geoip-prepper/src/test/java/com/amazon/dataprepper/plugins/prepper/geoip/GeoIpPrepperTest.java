@@ -2,6 +2,7 @@ package com.amazon.dataprepper.plugins.prepper.geoip;
 
 import com.amazon.dataprepper.model.configuration.PluginSetting;
 import com.amazon.dataprepper.model.record.Record;
+import com.amazon.dataprepper.plugins.prepper.geoip.provider.Fields;
 import com.amazon.dataprepper.plugins.prepper.geoip.provider.GeoIpProvider;
 import com.amazon.dataprepper.plugins.prepper.geoip.provider.LocationData;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -40,13 +41,21 @@ public class GeoIpPrepperTest {
     private static final String TEST_SPAN_TARGET_FIELD = "resource.attributes.client@ip";
     private static final String TEST_SPAN_BAD_TARGET_FIELD = "doesnt.exist.client@ip";
     private static final String TEST_LOCATION_FIELD_NAME = "locationData";
-    private static final LocationData TEST_LOCATION_DATA = new LocationData("United Kingdom", "West Berkshire", "Boxford");
+    private static final String[] TEST_DESIRED_FIELDS = {"city_name", "country_name", "region_name"};
+
+
+    private static final LocationData TEST_LOCATION_DATA = new LocationData(new HashMap<Fields, Object>() {{
+        put(Fields.COUNTRY_NAME, "United Kingdom");
+        put(Fields.REGION_NAME, "West Berkshire");
+        put(Fields.CITY_NAME, "Boxford");
+    }});
     final PluginSetting testPluginSetting = new PluginSetting(
             PLUGIN_NAME,
             new HashMap<String, Object>() {{
                 put(GeoIpPrepperConfig.DATABASE_PATH, TEST_DATABASE_PATH);
                 put(GeoIpPrepperConfig.TARGET_FIELD, TEST_SPAN_TARGET_FIELD);
                 put(GeoIpPrepperConfig.DATA_SOURCE, PROVIDER_TYPE);
+                put(GeoIpPrepperConfig.DESIRED_FIELDS, TEST_DESIRED_FIELDS);
 
             }}
     ) {{
@@ -85,7 +94,9 @@ public class GeoIpPrepperTest {
         Record<String> recordOut = recordsOut.get(0);
         Map<String, Object> rawSpanMap = OBJECT_MAPPER.readValue(recordOut.getData(), new TypeReference<Map<String, Object>>() {
         });
-        Assertions.assertEquals(TEST_LOCATION_DATA.toString(), rawSpanMap.get(TEST_LOCATION_FIELD_NAME));
+        Assertions.assertEquals(TEST_LOCATION_DATA.toMap().get(Fields.CITY_NAME.fieldName()), rawSpanMap.get(Fields.CITY_NAME.fieldName()));
+        Assertions.assertEquals(TEST_LOCATION_DATA.toMap().get(Fields.REGION_NAME.fieldName()), rawSpanMap.get(Fields.REGION_NAME.fieldName()));
+        Assertions.assertEquals(TEST_LOCATION_DATA.toMap().get(Fields.COUNTRY_NAME.fieldName()), rawSpanMap.get(Fields.COUNTRY_NAME.fieldName()));
     }
 
     @Test

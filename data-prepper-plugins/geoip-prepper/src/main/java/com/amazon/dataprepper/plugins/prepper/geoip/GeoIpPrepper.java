@@ -73,18 +73,17 @@ public class GeoIpPrepper extends AbstractPrepper<Record<String>, Record<String>
                 final Optional<String> foundIp = parser.getIpFromJson(rawSpanMap, targetField);
                 if (foundIp.isPresent()) {
                     final Optional<LocationData> foundData = provider.getDataFromIp(foundIp.get());
-                    //TODO This is a placeholder, how data is attached is still TBD
                     if (foundData.isPresent()) {
-                        rawSpanMap.put(locationField, foundData.get().toString());
+                        for (Map.Entry<String, Object> entry : foundData.get().toMap().entrySet())
+                            rawSpanMap.put(entry.getKey(), entry.getValue());
                         final String newData = OBJECT_MAPPER.writeValueAsString(rawSpanMap);
                         recordsOut.add(new Record<>(newData, record.getMetadata()));
-                        System.out.println(recordsOut);
                     } else {
                         recordsOut.add(record);
                     }
                 } else {
                     recordsOut.add(record);
-                    //TODO Handle no IP returned
+                    //TODO Handle logging for no IP returned
                 }
             } catch (JsonProcessingException e) {
                 LOG.error("Failed to parse the record: [{}]", record.getData());

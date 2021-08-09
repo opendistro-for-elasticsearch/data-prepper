@@ -3,26 +3,34 @@ package com.amazon.dataprepper.plugins.prepper.geoip.provider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.util.HashMap;
 
 public class LocationDataTest {
-    private static final String TEST_TOSTRING_OUTPUT = "LocationData{countryName='a', subdivisionName='b', cityName='c'}";
     private static LocationData expectedLocation;
 
     @BeforeEach
     public void setup() {
-        expectedLocation = new LocationData("a", "b", "c");
+        expectedLocation = new LocationData(new HashMap<Fields, Object>() {{
+            put(Fields.COUNTRY_NAME, "a");
+            put(Fields.REGION_NAME, "b");
+            put(Fields.CITY_NAME, "c");
+        }});
 
     }
 
-    @Test
-    public void testToString() {
-        Assertions.assertEquals(TEST_TOSTRING_OUTPUT, expectedLocation.toString());
-    }
 
     @Test
     public void testEquals() {
-        LocationData equalLocation = new LocationData("a", "b", "c");
-        LocationData unequalLocation = new LocationData("a", "b", "f");
+        LocationData equalLocation = new LocationData(new HashMap<Fields, Object>() {{
+            put(Fields.COUNTRY_NAME, "a");
+            put(Fields.REGION_NAME, "b");
+            put(Fields.CITY_NAME, "c");
+        }});
+        LocationData unequalLocation = new LocationData(new HashMap<Fields, Object>() {{
+            put(Fields.COUNTRY_NAME, "d");
+            put(Fields.REGION_NAME, "e");
+            put(Fields.CITY_NAME, "f");
+        }});
 
         Assertions.assertEquals(expectedLocation, expectedLocation);
         Assertions.assertNotEquals(expectedLocation, null);
