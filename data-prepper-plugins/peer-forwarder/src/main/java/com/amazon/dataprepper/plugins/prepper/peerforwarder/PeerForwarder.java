@@ -21,11 +21,11 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -95,10 +95,8 @@ public class PeerForwarder extends AbstractPrepper<Record<ExportTraceServiceRequ
             }
         }
 
-        // Buffer of requests to be exported to the downstream of the local data-prepper
-        final List<Record<ExportTraceServiceRequest>> results = new LinkedList<>();
-
-        final List<CompletableFuture<Record>> futures = new LinkedList<>();
+        final List<Record<ExportTraceServiceRequest>> recordsToProcessLocally = new ArrayList<>();
+        final List<CompletableFuture<Record>> forwardedRequestFutures = new ArrayList<>();
 
         for (final Map.Entry<String, List<ResourceSpans>> entry : groupedRS.entrySet()) {
             final TraceServiceGrpc.TraceServiceBlockingStub client;
@@ -116,9 +114,9 @@ public class PeerForwarder extends AbstractPrepper<Record<ExportTraceServiceRequ
                 if (currSpansCount >= maxNumSpansPerRequest) {
                     final ExportTraceServiceRequest currRequest = currRequestBuilder.build();
                     if (client == null) {
-                        results.add(new Record<>(currRequest));
+                        recordsToProcessLocally.add(new Record<>(currRequest));
                     } else {
-                        futures.add(processRequest(client, currRequest));
+                        forwardedRequestFutures.add(processRequest(client, currRequest));
                     }
                     currRequestBuilder = ExportTraceServiceRequest.newBuilder();
                     currSpansCount = 0;
@@ -130,25 +128,25 @@ public class PeerForwarder extends AbstractPrepper<Record<ExportTraceServiceRequ
             if (currSpansCount > 0) {
                 final ExportTraceServiceRequest currRequest = currRequestBuilder.build();
                 if (client == null) {
-                    results.add(new Record<>(currRequest));
+                    recordsToProcessLocally.add(new Record<>(currRequest));
                 } else {
-                    futures.add(processRequest(client, currRequest));
+                    forwardedRequestFutures.add(processRequest(client, currRequest));
                 }
             }
         }
 
-        for (final CompletableFuture<Record> future : futures) {
+        for (final CompletableFuture<Record> future : forwardedRequestFutures) {
             try {
                 final Record record = future.get();
                 if (record != null) {
-                    results.add(record);
+                    recordsToProcessLocally.add(record);
                 }
-            } catch (Exception e) {
+            } catch (InterruptedException | ExecutionException e) {
                 LOG.error("Problem with asynchronous peer forwarding", e);
             }
         }
 
-        return results;
+        return recordsToProcessLocally;
     }
 
     /**
