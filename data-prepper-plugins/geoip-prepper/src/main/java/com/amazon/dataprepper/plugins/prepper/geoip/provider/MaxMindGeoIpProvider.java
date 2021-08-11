@@ -68,77 +68,43 @@ public class MaxMindGeoIpProvider implements GeoIpProvider {
             final Continent continent = response.getContinent();
             final Postal postal = response.getPostal();
             final LocationData.Builder builder = new LocationData.Builder();
-            for (GeoDataField desiredField : this.fieldsToAdd) {
+            for (GeoDataField desiredField : fieldsToAdd) {
                 switch (desiredField) {
                     case IP:
                         builder.withIp(ipAddress.getHostAddress());
                         break;
                     case CITY_NAME:
-                        String cityName = city.getName();
-                        if (cityName != null) {
-                            builder.withCity(cityName);
-                        }
+                        builder.withCityName(city.getName());
                         break;
                     case REGION_NAME:
-                        String subdivisionName = subdivision.getName();
-                        if (subdivisionName != null) {
-                            builder.withRegion(subdivisionName);
-                        }
+                        builder.withRegion(subdivision.getName());
                         break;
                     case COUNTRY_NAME:
-                        String countryName = country.getName();
-                        if (countryName != null) {
-                            builder.withCountry(countryName);
-                        }
+                        builder.withCountry(country.getName());
                         break;
                     case CONTINENT_CODE:
-                        String continentCode = continent.getCode();
-                        if (continentCode != null) {
-                            builder.withContinent(continentCode);
-                        }
+                        builder.withContinent(continent.getCode());
                         break;
                     case COUNTRY_ISO_CODE:
-                        String countryIso = country.getIsoCode();
-                        if (countryIso != null) {
-                            builder.withCountryCode(countryIso);
-                        }
+                        builder.withCountryCode(country.getIsoCode());
                         break;
                     case REGION_CODE:
-                        String regionCode = subdivision.getIsoCode();
-                        if (regionCode != null) {
-                            builder.withRegionCode(regionCode);
-                        }
+                        builder.withRegionCode(subdivision.getIsoCode());
                         break;
                     case POSTAL_CODE:
-                        String postalCode = postal.getCode();
-                        if (postalCode != null) {
-                            builder.withPostal(postalCode);
-                        }
+                        builder.withPostal(postal.getCode());
                         break;
                     case TIMEZONE:
-                        String locationTimeZone = location.getTimeZone();
-                        if (locationTimeZone != null) {
-                            builder.withTimeZone(locationTimeZone);
-                        }
+                        builder.withTimeZone(location.getTimeZone());
                         break;
                     case LOCATION:
-                        Double latitude = location.getLatitude();
-                        Double longitude = location.getLongitude();
-                        if (latitude != null && longitude != null) {
-                            builder.withLocation(new Double[]{latitude, longitude});
-                        }
+                        builder.withLocation(new Double[]{location.getLatitude(), location.getLongitude()});
                         break;
                     case LATITUDE:
-                        Double lat = location.getLatitude();
-                        if (lat != null) {
-                            builder.withLatitude(lat);
-                        }
+                        builder.withLatitude(location.getLatitude());
                         break;
                     case LONGITUDE:
-                        Double lon = location.getLongitude();
-                        if (lon != null) {
-                            builder.withLongitude(lon);
-                        }
+                        builder.withLongitude(location.getLongitude());
                         break;
                 }
             }

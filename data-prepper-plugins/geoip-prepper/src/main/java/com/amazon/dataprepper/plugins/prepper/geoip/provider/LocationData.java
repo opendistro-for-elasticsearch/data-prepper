@@ -8,10 +8,10 @@ import java.util.Objects;
 
 public class LocationData {
     private final String CITY_FIELD = "geo.city_name";
-    private final String COUNTRY_FIELD = "geo.country_name";
+    private final String COUNTRY_NAME_FIELD = "geo.country_name";
     private final String CONTINENT_FIELD = "geo.continent_code";
     private final String COUNTRY_ISO_FIELD = "geo.country_iso_code";
-    private final String POSTAL_FIELD = "geo.postal_code";
+    private final String POSTAL_CODE_FIELD = "geo.postal_code";
     private final String REGION_FIELD = "geo.region_name";
     private final String REGION_CODE_FIELD = "geo.region_code";
     private final String TIMEZONE_FIELD = "geo.timezone";
@@ -20,7 +20,7 @@ public class LocationData {
     private final String LONGITUDE_FIELD = "geo.location.lon";
     private final String ip;
 
-    @JsonProperty(COUNTRY_FIELD)
+    @JsonProperty(COUNTRY_NAME_FIELD)
     private final String countryName;
     @JsonProperty(REGION_FIELD)
     private final String regionName;
@@ -36,14 +36,14 @@ public class LocationData {
     private final String continentCode;
     @JsonProperty(COUNTRY_ISO_FIELD)
     private final String countryCode;
-    @JsonProperty(POSTAL_FIELD)
+    @JsonProperty(POSTAL_CODE_FIELD)
     private final String postalCode;
     @JsonProperty(REGION_CODE_FIELD)
     private final String regionCode;
     @JsonProperty(TIMEZONE_FIELD)
     private final String timeZone;
 
-    public LocationData(Builder builder) {
+    private LocationData(Builder builder) {
         ip = builder.ip;
         countryName = builder.countryName;
         regionName = builder.regionName;
@@ -54,11 +54,16 @@ public class LocationData {
         postalCode = builder.postalCode;
         regionCode = builder.regionCode;
         timeZone = builder.timeZone;
-
+        //TODO Investigate how location is seen in ElasticSearch and determine the best way to store the Lat/Lon point
         if (latAndLong != null && latAndLong.length == 2) {
             location = new HashMap<String, Double>() {{
                 put("lat", latAndLong[0]);
                 put("lon", latAndLong[1]);
+            }};
+        } else if ((builder.latitude != null) && (builder.longitude != null)){
+            location = new HashMap<String, Double>() {{
+                put("lat", builder.latitude);
+                put("lon", builder.longitude);
             }};
         } else {
             location = null;
@@ -72,12 +77,34 @@ public class LocationData {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LocationData that = (LocationData) o;
-        return Objects.equals(ip, that.ip) && Objects.equals(countryName, that.countryName) && Objects.equals(regionName, that.regionName) && Objects.equals(cityName, that.cityName) && Objects.equals(location, that.location) && Objects.equals(latitude, that.latitude) && Objects.equals(longitude, that.longitude) && Objects.equals(continentCode, that.continentCode) && Objects.equals(countryCode, that.countryCode) && Objects.equals(postalCode, that.postalCode) && Objects.equals(regionCode, that.regionCode) && Objects.equals(timeZone, that.timeZone);
+        return Objects.equals(ip, that.ip)
+                && Objects.equals(countryName, that.countryName)
+                && Objects.equals(regionName, that.regionName)
+                && Objects.equals(cityName, that.cityName)
+                && Objects.equals(location, that.location)
+                && Objects.equals(latitude, that.latitude)
+                && Objects.equals(longitude, that.longitude)
+                && Objects.equals(continentCode, that.continentCode)
+                && Objects.equals(countryCode, that.countryCode)
+                && Objects.equals(postalCode, that.postalCode)
+                && Objects.equals(regionCode, that.regionCode)
+                && Objects.equals(timeZone, that.timeZone);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ip, countryName, regionName, cityName, location, latitude, longitude, continentCode, countryCode, postalCode, regionCode, timeZone);
+        return Objects.hash(ip,
+                countryName,
+                regionName,
+                cityName,
+                location,
+                latitude,
+                longitude,
+                continentCode,
+                countryCode,
+                postalCode,
+                regionCode,
+                timeZone);
     }
 
     public static final class Builder {
@@ -99,13 +126,13 @@ public class LocationData {
             return this;
         }
 
-        public Builder withCity(String city) {
+        public Builder withCityName(String city) {
             this.cityName = city;
             return this;
         }
 
-        public Builder withCountry(String country) {
-            this.countryName = country;
+        public Builder withCountry(String countryName) {
+            this.countryName = countryName;
             return this;
         }
 

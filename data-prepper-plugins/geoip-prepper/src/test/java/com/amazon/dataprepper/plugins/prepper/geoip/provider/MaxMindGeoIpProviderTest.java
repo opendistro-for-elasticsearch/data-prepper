@@ -21,7 +21,7 @@ public class MaxMindGeoIpProviderTest {
     public void testIpLookup() throws JsonProcessingException {
         LocationData.Builder builder = new LocationData.Builder();
         builder.withCountry("United Kingdom").withRegion("West Berkshire")
-                .withCity("Boxford").withLocation(new Double[]{51.75, -1.25}).withLatitude(51.75).withLongitude(-1.25)
+                .withCityName("Boxford").withLocation(new Double[]{51.75, -1.25}).withLatitude(51.75).withLongitude(-1.25)
                 .withIp("2.125.160.216").withContinent("EU").withCountryCode("GB").withRegionCode("WBK")
                 .withPostal("OX1").withTimeZone("Europe/London");
         LocationData locationData = builder.build();
