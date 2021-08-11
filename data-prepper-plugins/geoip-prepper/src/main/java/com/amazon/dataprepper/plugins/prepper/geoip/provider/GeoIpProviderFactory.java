@@ -5,7 +5,6 @@ import com.amazon.dataprepper.plugins.prepper.geoip.GeoIpPrepperConfig;
 
 import java.util.Objects;
 
-
 public class GeoIpProviderFactory {
     private static final String[] DEFAULT_DESIRED_FIELDS = new String[]{};
 

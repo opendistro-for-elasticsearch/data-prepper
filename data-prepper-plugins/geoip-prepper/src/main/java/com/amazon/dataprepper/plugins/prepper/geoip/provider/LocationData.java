@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Objects;
 
 public class LocationData {
-
     private final String CITY_FIELD = "geo.city_name";
     private final String COUNTRY_FIELD = "geo.country_name";
     private final String CONTINENT_FIELD = "geo.continent_code";
@@ -44,7 +43,7 @@ public class LocationData {
     @JsonProperty(TIMEZONE_FIELD)
     private final String timeZone;
 
-    public LocationData(builder builder) {
+    public LocationData(Builder builder) {
         ip = builder.ip;
         countryName = builder.countryName;
         regionName = builder.regionName;
@@ -81,7 +80,7 @@ public class LocationData {
         return Objects.hash(ip, countryName, regionName, cityName, location, latitude, longitude, continentCode, countryCode, postalCode, regionCode, timeZone);
     }
 
-    public static final class builder {
+    public static final class Builder {
         private String ip;
         private String countryName;
         private String regionName;
@@ -95,64 +94,64 @@ public class LocationData {
         private String regionCode;
         private String timeZone;
 
-        public builder withIp(String ip) {
+        public Builder withIp(String ip) {
             this.ip = ip;
             return this;
         }
 
-        public builder withCity(String city) {
+        public Builder withCity(String city) {
             this.cityName = city;
             return this;
         }
 
-        public builder withCountry(String country) {
+        public Builder withCountry(String country) {
             this.countryName = country;
             return this;
         }
 
-        public builder withContinent(String continent) {
+        public Builder withContinent(String continent) {
             this.continentCode = continent;
             return this;
         }
 
-        public builder withCountryCode(String countryCode) {
+        public Builder withCountryCode(String countryCode) {
             this.countryCode = countryCode;
             return this;
         }
 
-        public builder withPostal(String postal) {
+        public Builder withPostal(String postal) {
             this.postalCode = postal;
             return this;
         }
 
-        public builder withRegion(String region) {
+        public Builder withRegion(String region) {
             this.regionName = region;
             return this;
         }
 
-        public builder withRegionCode(String regionCode) {
+        public Builder withRegionCode(String regionCode) {
             this.regionCode = regionCode;
             return this;
         }
 
-        public builder withTimeZone(String timeZone) {
+        public Builder withTimeZone(String timeZone) {
             this.timeZone = timeZone;
             return this;
         }
 
-        public builder withLocation(Double[] location) {
+        public Builder withLocation(Double[] location) {
             if (location.length != 2)
                 throw new IllegalArgumentException("location must be an array of length 2 in form [lat, long]");
             this.location = location;
             return this;
         }
 
-        public builder withLatitude(Double latitude) {
+        public Builder withLatitude(Double latitude) {
             this.latitude = latitude;
             return this;
         }
 
-        public builder withLongitude(Double longitude) {
+        public Builder withLongitude(Double longitude) {
             this.longitude = longitude;
             return this;
         }

@@ -27,7 +27,6 @@ public class GeoIpPrepper extends AbstractPrepper<Record<String>, Record<String>
     private static final Logger LOG = LoggerFactory.getLogger(GeoIpPrepper.class);
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
     private final String targetField;
     private final GeoIpProvider provider;
@@ -40,7 +39,6 @@ public class GeoIpPrepper extends AbstractPrepper<Record<String>, Record<String>
         Objects.requireNonNull(targetField);
         provider = new GeoIpProviderFactory().createGeoIpProvider(pluginSetting);
         parser = new IpParser();
-
     }
 
     //
@@ -51,7 +49,6 @@ public class GeoIpPrepper extends AbstractPrepper<Record<String>, Record<String>
         parser = new IpParser();
         targetField = (String) pluginSetting.getAttributeFromSettings(GeoIpPrepperConfig.TARGET_FIELD);
         Objects.requireNonNull(targetField);
-
     }
 
     /**

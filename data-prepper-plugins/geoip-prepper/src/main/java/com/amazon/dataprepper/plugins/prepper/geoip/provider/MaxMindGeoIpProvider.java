@@ -67,7 +67,7 @@ public class MaxMindGeoIpProvider implements GeoIpProvider {
             final Location location = response.getLocation();
             final Continent continent = response.getContinent();
             final Postal postal = response.getPostal();
-            final LocationData.builder builder = new LocationData.builder();
+            final LocationData.Builder builder = new LocationData.Builder();
             for (GeoDataField desiredField : this.fieldsToAdd) {
                 switch (desiredField) {
                     case IP:
