@@ -19,19 +19,19 @@ public class MaxMindGeoIpProviderTest {
 
     @Test
     public void testIpLookup() {
-        LocationData locationData = new LocationData(new HashMap<Fields, Object>() {{
-            put(Fields.COUNTRY_NAME, "United Kingdom");
-            put(Fields.REGION_NAME, "West Berkshire");
-            put(Fields.CITY_NAME, "Boxford");
-            put(Fields.LOCATION, new Double[]{51.75, -1.25});
-            put(Fields.LATITUDE, 51.75);
-            put(Fields.LONGITUDE, -1.25);
-            put(Fields.IP, "2.125.160.216");
-            put(Fields.CONTINENT_CODE, "EU");
-            put(Fields.COUNTRY_CODE2, "GB");
-            put(Fields.REGION_CODE, "WBK");
-            put(Fields.POSTAL_CODE, "OX1");
-            put(Fields.TIMEZONE, "Europe/London");
+        LocationData locationData = new LocationData(new HashMap<GeoDataField, Object>() {{
+            put(GeoDataField.COUNTRY_NAME, "United Kingdom");
+            put(GeoDataField.REGION_NAME, "West Berkshire");
+            put(GeoDataField.CITY_NAME, "Boxford");
+            put(GeoDataField.LOCATION, new Double[]{51.75, -1.25});
+            put(GeoDataField.LATITUDE, 51.75);
+            put(GeoDataField.LONGITUDE, -1.25);
+            put(GeoDataField.IP, "2.125.160.216");
+            put(GeoDataField.CONTINENT_CODE, "EU");
+            put(GeoDataField.COUNTRY_ISO_CODE, "GB");
+            put(GeoDataField.REGION_CODE, "WBK");
+            put(GeoDataField.POSTAL_CODE, "OX1");
+            put(GeoDataField.TIMEZONE, "Europe/London");
         }});
         Assertions.assertEquals(locationData, maxMindGeoIpProvider.getDataFromIp("2.125.160.216").orElse(null));
     }

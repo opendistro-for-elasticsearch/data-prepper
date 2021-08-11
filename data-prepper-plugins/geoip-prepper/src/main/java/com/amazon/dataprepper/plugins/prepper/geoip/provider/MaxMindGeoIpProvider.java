@@ -32,7 +32,7 @@ import java.util.Optional;
 public class MaxMindGeoIpProvider implements GeoIpProvider {
     private static final Logger LOG = LoggerFactory.getLogger(MaxMindGeoIpProvider.class);
     private final DatabaseReader databaseReader;
-    private ArrayList<Fields> fieldsToAdd = new ArrayList<>();
+    private ArrayList<GeoDataField> fieldsToAdd = new ArrayList<>();
 
     public MaxMindGeoIpProvider(String databasePath, String[] desiredFields) {
         Objects.requireNonNull(databasePath, String.format("Missing '%s' configuration value", GeoIpPrepperConfig.DATABASE_PATH));
@@ -40,17 +40,14 @@ public class MaxMindGeoIpProvider implements GeoIpProvider {
         if (desiredFields != null && desiredFields.length > 0) {
             for (String desiredField : desiredFields) {
                 try {
-                    Fields field = Fields.valueOf(desiredField.toUpperCase(Locale.ROOT));
+                    GeoDataField field = GeoDataField.valueOf(desiredField.toUpperCase(Locale.ROOT));
                     fieldsToAdd.add(field);
                 } catch (Exception e) {
                     LOG.error("Invalid field in config settings, {}", desiredField);
                 }
             }
         } else {
-            fieldsToAdd = new ArrayList<>(Arrays.asList(Fields.IP, Fields.CITY_NAME,
-                    Fields.CONTINENT_CODE, Fields.COUNTRY_NAME, Fields.COUNTRY_CODE2,
-                    Fields.IP, Fields.POSTAL_CODE, Fields.REGION_NAME,
-                    Fields.REGION_CODE, Fields.TIMEZONE, Fields.LOCATION, Fields.LATITUDE, Fields.LONGITUDE));
+            fieldsToAdd = new ArrayList<>(Arrays.asList(GeoDataField.values()));
         }
         try {
             databaseReader = new DatabaseReader.Builder(database).withCache(new CHMCache()).build();
@@ -72,78 +69,78 @@ public class MaxMindGeoIpProvider implements GeoIpProvider {
             final Location location = response.getLocation();
             final Continent continent = response.getContinent();
             final Postal postal = response.getPostal();
-            Map<Fields, Object> locationDetails = new HashMap<>();
+            Map<GeoDataField, Object> locationDetails = new HashMap<>();
 
-            for (Fields desiredField : this.fieldsToAdd) {
+            for (GeoDataField desiredField : this.fieldsToAdd) {
                 switch (desiredField) {
                     case IP:
-                        locationDetails.put(Fields.IP, ipAddress.getHostAddress());
+                        locationDetails.put(GeoDataField.IP, ipAddress.getHostAddress());
                         break;
                     case CITY_NAME:
                         String cityName = city.getName();
                         if (cityName != null) {
-                            locationDetails.put(Fields.CITY_NAME, cityName);
+                            locationDetails.put(GeoDataField.CITY_NAME, cityName);
                         }
                         break;
                     case REGION_NAME:
                         String subdivisionName = subdivision.getName();
                         if (subdivisionName != null) {
-                            locationDetails.put(Fields.REGION_NAME, subdivisionName);
+                            locationDetails.put(GeoDataField.REGION_NAME, subdivisionName);
                         }
                         break;
                     case COUNTRY_NAME:
                         String countryName = country.getName();
                         if (countryName != null) {
-                            locationDetails.put(Fields.COUNTRY_NAME, countryName);
+                            locationDetails.put(GeoDataField.COUNTRY_NAME, countryName);
                         }
                         break;
                     case CONTINENT_CODE:
                         String continentCode = continent.getCode();
                         if (continentCode != null) {
-                            locationDetails.put(Fields.CONTINENT_CODE, continentCode);
+                            locationDetails.put(GeoDataField.CONTINENT_CODE, continentCode);
                         }
                         break;
-                    case COUNTRY_CODE2:
+                    case COUNTRY_ISO_CODE:
                         String countryCode2 = country.getIsoCode();
                         if (countryCode2 != null) {
-                            locationDetails.put(Fields.COUNTRY_CODE2, countryCode2);
+                            locationDetails.put(GeoDataField.COUNTRY_ISO_CODE, countryCode2);
                         }
                         break;
                     case REGION_CODE:
                         String subdivisionCode = subdivision.getIsoCode();
                         if (subdivisionCode != null) {
-                            locationDetails.put(Fields.REGION_CODE, subdivisionCode);
+                            locationDetails.put(GeoDataField.REGION_CODE, subdivisionCode);
                         }
                         break;
                     case POSTAL_CODE:
                         String postalCode = postal.getCode();
                         if (postalCode != null) {
-                            locationDetails.put(Fields.POSTAL_CODE, postalCode);
+                            locationDetails.put(GeoDataField.POSTAL_CODE, postalCode);
                         }
                         break;
                     case TIMEZONE:
                         String locationTimeZone = location.getTimeZone();
                         if (locationTimeZone != null) {
-                            locationDetails.put(Fields.TIMEZONE, locationTimeZone);
+                            locationDetails.put(GeoDataField.TIMEZONE, locationTimeZone);
                         }
                         break;
                     case LOCATION:
                         Double latitude = location.getLatitude();
                         Double longitude = location.getLongitude();
                         if (latitude != null && longitude != null) {
-                            locationDetails.put(Fields.LOCATION, new Double[]{latitude, longitude});
+                            locationDetails.put(GeoDataField.LOCATION, new Double[]{latitude, longitude});
                         }
                         break;
                     case LATITUDE:
                         Double lat = location.getLatitude();
                         if (lat != null) {
-                            locationDetails.put(Fields.LATITUDE, lat);
+                            locationDetails.put(GeoDataField.LATITUDE, lat);
                         }
                         break;
                     case LONGITUDE:
                         Double lon = location.getLongitude();
                         if (lon != null) {
-                            locationDetails.put(Fields.LONGITUDE, lon);
+                            locationDetails.put(GeoDataField.LONGITUDE, lon);
                         }
                         break;
                 }

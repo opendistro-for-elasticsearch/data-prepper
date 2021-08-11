@@ -10,10 +10,10 @@ public class LocationDataTest {
 
     @BeforeEach
     public void setup() {
-        expectedLocation = new LocationData(new HashMap<Fields, Object>() {{
-            put(Fields.COUNTRY_NAME, "a");
-            put(Fields.REGION_NAME, "b");
-            put(Fields.CITY_NAME, "c");
+        expectedLocation = new LocationData(new HashMap<GeoDataField, Object>() {{
+            put(GeoDataField.COUNTRY_NAME, "a");
+            put(GeoDataField.REGION_NAME, "b");
+            put(GeoDataField.CITY_NAME, "c");
         }});
 
     }
@@ -21,15 +21,15 @@ public class LocationDataTest {
 
     @Test
     public void testEquals() {
-        LocationData equalLocation = new LocationData(new HashMap<Fields, Object>() {{
-            put(Fields.COUNTRY_NAME, "a");
-            put(Fields.REGION_NAME, "b");
-            put(Fields.CITY_NAME, "c");
+        LocationData equalLocation = new LocationData(new HashMap<GeoDataField, Object>() {{
+            put(GeoDataField.COUNTRY_NAME, "a");
+            put(GeoDataField.REGION_NAME, "b");
+            put(GeoDataField.CITY_NAME, "c");
         }});
-        LocationData unequalLocation = new LocationData(new HashMap<Fields, Object>() {{
-            put(Fields.COUNTRY_NAME, "d");
-            put(Fields.REGION_NAME, "e");
-            put(Fields.CITY_NAME, "f");
+        LocationData unequalLocation = new LocationData(new HashMap<GeoDataField, Object>() {{
+            put(GeoDataField.COUNTRY_NAME, "d");
+            put(GeoDataField.REGION_NAME, "e");
+            put(GeoDataField.CITY_NAME, "f");
         }});
 
         Assertions.assertEquals(expectedLocation, expectedLocation);

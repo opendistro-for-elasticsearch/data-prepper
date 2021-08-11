@@ -2,7 +2,7 @@ package com.amazon.dataprepper.plugins.prepper.geoip;
 
 import com.amazon.dataprepper.model.configuration.PluginSetting;
 import com.amazon.dataprepper.model.record.Record;
-import com.amazon.dataprepper.plugins.prepper.geoip.provider.Fields;
+import com.amazon.dataprepper.plugins.prepper.geoip.provider.GeoDataField;
 import com.amazon.dataprepper.plugins.prepper.geoip.provider.GeoIpProvider;
 import com.amazon.dataprepper.plugins.prepper.geoip.provider.LocationData;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class GeoIpPrepperTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
     private static final String TEST_PIPELINE_NAME = "testPipelineName";
     private static final String PLUGIN_NAME = "geoip_prepper";
     private static final String PROVIDER_TYPE = "MaxMindGeolite2CityDatabase";
@@ -44,10 +45,10 @@ public class GeoIpPrepperTest {
     private static final String[] TEST_DESIRED_FIELDS = {"city_name", "country_name", "region_name"};
 
 
-    private static final LocationData TEST_LOCATION_DATA = new LocationData(new HashMap<Fields, Object>() {{
-        put(Fields.COUNTRY_NAME, "United Kingdom");
-        put(Fields.REGION_NAME, "West Berkshire");
-        put(Fields.CITY_NAME, "Boxford");
+    private static final LocationData TEST_LOCATION_DATA = new LocationData(new HashMap<GeoDataField, Object>() {{
+        put(GeoDataField.COUNTRY_NAME, "United Kingdom");
+        put(GeoDataField.REGION_NAME, "West Berkshire");
+        put(GeoDataField.CITY_NAME, "Boxford");
     }});
     final PluginSetting testPluginSetting = new PluginSetting(
             PLUGIN_NAME,
@@ -94,9 +95,10 @@ public class GeoIpPrepperTest {
         Record<String> recordOut = recordsOut.get(0);
         Map<String, Object> rawSpanMap = OBJECT_MAPPER.readValue(recordOut.getData(), new TypeReference<Map<String, Object>>() {
         });
-        Assertions.assertEquals(TEST_LOCATION_DATA.toMap().get(Fields.CITY_NAME.fieldName()), rawSpanMap.get(Fields.CITY_NAME.fieldName()));
-        Assertions.assertEquals(TEST_LOCATION_DATA.toMap().get(Fields.REGION_NAME.fieldName()), rawSpanMap.get(Fields.REGION_NAME.fieldName()));
-        Assertions.assertEquals(TEST_LOCATION_DATA.toMap().get(Fields.COUNTRY_NAME.fieldName()), rawSpanMap.get(Fields.COUNTRY_NAME.fieldName()));
+        Map<String, Object> testLocationDataMap = OBJECT_MAPPER.convertValue(TEST_LOCATION_DATA, MAP_TYPE_REFERENCE);
+        Assertions.assertEquals(testLocationDataMap.get(GeoDataField.CITY_NAME.fieldName()), rawSpanMap.get(GeoDataField.CITY_NAME.fieldName()));
+        Assertions.assertEquals(testLocationDataMap.get(GeoDataField.REGION_NAME.fieldName()), rawSpanMap.get(GeoDataField.REGION_NAME.fieldName()));
+        Assertions.assertEquals(testLocationDataMap.get(GeoDataField.COUNTRY_NAME.fieldName()), rawSpanMap.get(GeoDataField.COUNTRY_NAME.fieldName()));
     }
 
     @Test
