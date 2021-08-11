@@ -1,10 +1,11 @@
 package com.amazon.dataprepper.plugins.prepper.geoip.provider;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import java.util.HashMap;
 
 public class MaxMindGeoIpProviderTest {
     private static final String TEST_DATABASE_PATH = "./src/test/resources/GeoLite2-City-Test.mmdb";
@@ -18,21 +19,15 @@ public class MaxMindGeoIpProviderTest {
     }
 
     @Test
-    public void testIpLookup() {
-        LocationData locationData = new LocationData(new HashMap<GeoDataField, Object>() {{
-            put(GeoDataField.COUNTRY_NAME, "United Kingdom");
-            put(GeoDataField.REGION_NAME, "West Berkshire");
-            put(GeoDataField.CITY_NAME, "Boxford");
-            put(GeoDataField.LOCATION, new Double[]{51.75, -1.25});
-            put(GeoDataField.LATITUDE, 51.75);
-            put(GeoDataField.LONGITUDE, -1.25);
-            put(GeoDataField.IP, "2.125.160.216");
-            put(GeoDataField.CONTINENT_CODE, "EU");
-            put(GeoDataField.COUNTRY_ISO_CODE, "GB");
-            put(GeoDataField.REGION_CODE, "WBK");
-            put(GeoDataField.POSTAL_CODE, "OX1");
-            put(GeoDataField.TIMEZONE, "Europe/London");
-        }});
+    public void testIpLookup() throws JsonProcessingException {
+        LocationData.builder builder = new LocationData.builder();
+        builder.withCountry("United Kingdom").withRegion("West Berkshire")
+                .withCity("Boxford").withLocation(new Double[]{51.75, -1.25}).withLatitude(51.75).withLongitude(-1.25)
+                .withIp("2.125.160.216").withContinent("EU").withCountryCode("GB").withRegionCode("WBK")
+                .withPostal("OX1").withTimeZone("Europe/London");
+        LocationData locationData = builder.build();
+        System.out.println(new ObjectMapper().writeValueAsString(locationData));
+        System.out.println(new ObjectMapper().writeValueAsString(maxMindGeoIpProvider.getDataFromIp("2.125.160.216").orElse(null)));
         Assertions.assertEquals(locationData, maxMindGeoIpProvider.getDataFromIp("2.125.160.216").orElse(null));
     }
 

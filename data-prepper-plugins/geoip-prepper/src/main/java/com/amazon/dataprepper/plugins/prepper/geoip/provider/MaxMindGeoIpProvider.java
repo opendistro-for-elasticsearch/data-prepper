@@ -22,9 +22,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -69,83 +67,82 @@ public class MaxMindGeoIpProvider implements GeoIpProvider {
             final Location location = response.getLocation();
             final Continent continent = response.getContinent();
             final Postal postal = response.getPostal();
-            Map<GeoDataField, Object> locationDetails = new HashMap<>();
-
+            final LocationData.builder builder = new LocationData.builder();
             for (GeoDataField desiredField : this.fieldsToAdd) {
                 switch (desiredField) {
                     case IP:
-                        locationDetails.put(GeoDataField.IP, ipAddress.getHostAddress());
+                        builder.withIp(ipAddress.getHostAddress());
                         break;
                     case CITY_NAME:
                         String cityName = city.getName();
                         if (cityName != null) {
-                            locationDetails.put(GeoDataField.CITY_NAME, cityName);
+                            builder.withCity(cityName);
                         }
                         break;
                     case REGION_NAME:
                         String subdivisionName = subdivision.getName();
                         if (subdivisionName != null) {
-                            locationDetails.put(GeoDataField.REGION_NAME, subdivisionName);
+                            builder.withRegion(subdivisionName);
                         }
                         break;
                     case COUNTRY_NAME:
                         String countryName = country.getName();
                         if (countryName != null) {
-                            locationDetails.put(GeoDataField.COUNTRY_NAME, countryName);
+                            builder.withCountry(countryName);
                         }
                         break;
                     case CONTINENT_CODE:
                         String continentCode = continent.getCode();
                         if (continentCode != null) {
-                            locationDetails.put(GeoDataField.CONTINENT_CODE, continentCode);
+                            builder.withContinent(continentCode);
                         }
                         break;
                     case COUNTRY_ISO_CODE:
-                        String countryCode2 = country.getIsoCode();
-                        if (countryCode2 != null) {
-                            locationDetails.put(GeoDataField.COUNTRY_ISO_CODE, countryCode2);
+                        String countryIso = country.getIsoCode();
+                        if (countryIso != null) {
+                            builder.withCountryCode(countryIso);
                         }
                         break;
                     case REGION_CODE:
-                        String subdivisionCode = subdivision.getIsoCode();
-                        if (subdivisionCode != null) {
-                            locationDetails.put(GeoDataField.REGION_CODE, subdivisionCode);
+                        String regionCode = subdivision.getIsoCode();
+                        if (regionCode != null) {
+                            builder.withRegionCode(regionCode);
                         }
                         break;
                     case POSTAL_CODE:
                         String postalCode = postal.getCode();
                         if (postalCode != null) {
-                            locationDetails.put(GeoDataField.POSTAL_CODE, postalCode);
+                            builder.withPostal(postalCode);
                         }
                         break;
                     case TIMEZONE:
                         String locationTimeZone = location.getTimeZone();
                         if (locationTimeZone != null) {
-                            locationDetails.put(GeoDataField.TIMEZONE, locationTimeZone);
+                            builder.withTimeZone(locationTimeZone);
                         }
                         break;
                     case LOCATION:
                         Double latitude = location.getLatitude();
                         Double longitude = location.getLongitude();
                         if (latitude != null && longitude != null) {
-                            locationDetails.put(GeoDataField.LOCATION, new Double[]{latitude, longitude});
+                            builder.withLocation(new Double[]{latitude, longitude});
                         }
                         break;
                     case LATITUDE:
                         Double lat = location.getLatitude();
                         if (lat != null) {
-                            locationDetails.put(GeoDataField.LATITUDE, lat);
+                            builder.withLatitude(lat);
                         }
                         break;
                     case LONGITUDE:
                         Double lon = location.getLongitude();
                         if (lon != null) {
-                            locationDetails.put(GeoDataField.LONGITUDE, lon);
+                            builder.withLongitude(lon);
                         }
                         break;
                 }
             }
-            final LocationData returnData = new LocationData(locationDetails);
+            final LocationData returnData = builder.build();
             return Optional.of(returnData);
         } catch (UnknownHostException e) {
             LOG.info("IP Field contained invalid IP address or hostname.", e);

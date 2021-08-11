@@ -32,7 +32,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class GeoIpPrepperTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {
+    };
     private static final String TEST_PIPELINE_NAME = "testPipelineName";
     private static final String PLUGIN_NAME = "geoip_prepper";
     private static final String PROVIDER_TYPE = "MaxMindGeolite2CityDatabase";
@@ -44,12 +45,9 @@ public class GeoIpPrepperTest {
     private static final String TEST_LOCATION_FIELD_NAME = "locationData";
     private static final String[] TEST_DESIRED_FIELDS = {"city_name", "country_name", "region_name"};
 
+    private static final LocationData TEST_LOCATION_DATA = new LocationData.builder().withCountry("United Kingdom")
+            .withRegion("West Berkshire").withCity("Boxford").build();
 
-    private static final LocationData TEST_LOCATION_DATA = new LocationData(new HashMap<GeoDataField, Object>() {{
-        put(GeoDataField.COUNTRY_NAME, "United Kingdom");
-        put(GeoDataField.REGION_NAME, "West Berkshire");
-        put(GeoDataField.CITY_NAME, "Boxford");
-    }});
     final PluginSetting testPluginSetting = new PluginSetting(
             PLUGIN_NAME,
             new HashMap<String, Object>() {{

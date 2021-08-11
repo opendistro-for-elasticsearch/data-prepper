@@ -44,17 +44,17 @@ public class LocationData {
     @JsonProperty(TIMEZONE_FIELD)
     private final String timeZone;
 
-    public LocationData(Map<GeoDataField, Object> fields) {
-        ip = (String) fields.get(GeoDataField.IP);
-        countryName = (String) fields.get(GeoDataField.COUNTRY_NAME);
-        regionName = (String) fields.get(GeoDataField.REGION_NAME);
-        cityName = (String) fields.get(GeoDataField.CITY_NAME);
-        Double[] latAndLong = (Double[]) fields.get(GeoDataField.LOCATION);
-        continentCode = (String) fields.get(GeoDataField.CONTINENT_CODE);
-        countryCode = (String) fields.get(GeoDataField.COUNTRY_ISO_CODE);
-        postalCode = (String) fields.get(GeoDataField.POSTAL_CODE);
-        regionCode = (String) fields.get(GeoDataField.REGION_CODE);
-        timeZone = (String) fields.get(GeoDataField.TIMEZONE);
+    public LocationData(builder builder) {
+        ip = builder.ip;
+        countryName = builder.countryName;
+        regionName = builder.regionName;
+        cityName = builder.cityName;
+        Double[] latAndLong = builder.location;
+        continentCode = builder.continentCode;
+        countryCode = builder.countryCode;
+        postalCode = builder.postalCode;
+        regionCode = builder.regionCode;
+        timeZone = builder.timeZone;
 
         if (latAndLong != null && latAndLong.length == 2) {
             location = new HashMap<String, Double>() {{
@@ -64,8 +64,8 @@ public class LocationData {
         } else {
             location = null;
         }
-        latitude = (Double) fields.get(GeoDataField.LATITUDE);
-        longitude = (Double) fields.get(GeoDataField.LONGITUDE);
+        latitude = builder.latitude;
+        longitude = builder.longitude;
     }
 
     @Override
@@ -80,4 +80,86 @@ public class LocationData {
     public int hashCode() {
         return Objects.hash(ip, countryName, regionName, cityName, location, latitude, longitude, continentCode, countryCode, postalCode, regionCode, timeZone);
     }
+
+    public static final class builder {
+        private String ip;
+        private String countryName;
+        private String regionName;
+        private String cityName;
+        private Double[] location;
+        private Double latitude;
+        private Double longitude;
+        private String continentCode;
+        private String countryCode;
+        private String postalCode;
+        private String regionCode;
+        private String timeZone;
+
+        public builder withIp(String ip) {
+            this.ip = ip;
+            return this;
+        }
+
+        public builder withCity(String city) {
+            this.cityName = city;
+            return this;
+        }
+
+        public builder withCountry(String country) {
+            this.countryName = country;
+            return this;
+        }
+
+        public builder withContinent(String continent) {
+            this.continentCode = continent;
+            return this;
+        }
+
+        public builder withCountryCode(String countryCode) {
+            this.countryCode = countryCode;
+            return this;
+        }
+
+        public builder withPostal(String postal) {
+            this.postalCode = postal;
+            return this;
+        }
+
+        public builder withRegion(String region) {
+            this.regionName = region;
+            return this;
+        }
+
+        public builder withRegionCode(String regionCode) {
+            this.regionCode = regionCode;
+            return this;
+        }
+
+        public builder withTimeZone(String timeZone) {
+            this.timeZone = timeZone;
+            return this;
+        }
+
+        public builder withLocation(Double[] location) {
+            if (location.length != 2)
+                throw new IllegalArgumentException("location must be an array of length 2 in form [lat, long]");
+            this.location = location;
+            return this;
+        }
+
+        public builder withLatitude(Double latitude) {
+            this.latitude = latitude;
+            return this;
+        }
+
+        public builder withLongitude(Double longitude) {
+            this.longitude = longitude;
+            return this;
+        }
+
+        public LocationData build() {
+            return new LocationData(this);
+        }
+    }
 }
+
