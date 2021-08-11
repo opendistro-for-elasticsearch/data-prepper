@@ -8,8 +8,6 @@ import com.amazon.dataprepper.model.record.Record;
 import com.amazon.dataprepper.plugins.prepper.geoip.provider.GeoIpProvider;
 import com.amazon.dataprepper.plugins.prepper.geoip.provider.GeoIpProviderFactory;
 import com.amazon.dataprepper.plugins.prepper.geoip.provider.LocationData;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
