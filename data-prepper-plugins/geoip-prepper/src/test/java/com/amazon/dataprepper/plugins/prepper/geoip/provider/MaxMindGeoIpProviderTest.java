@@ -1,6 +1,5 @@
 package com.amazon.dataprepper.plugins.prepper.geoip.provider;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
