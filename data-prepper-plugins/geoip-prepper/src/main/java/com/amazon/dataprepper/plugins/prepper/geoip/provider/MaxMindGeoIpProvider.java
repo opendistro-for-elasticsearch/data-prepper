@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,7 +31,7 @@ import java.util.Optional;
 public class MaxMindGeoIpProvider implements GeoIpProvider {
     private static final Logger LOG = LoggerFactory.getLogger(MaxMindGeoIpProvider.class);
     private final DatabaseReader databaseReader;
-    private ArrayList<GeoDataField> fieldsToAdd = new ArrayList<>();
+    private final List<GeoDataField> desiredFields = new ArrayList<>();
 
     public MaxMindGeoIpProvider(String databasePath, String[] desiredFields) {
         Objects.requireNonNull(databasePath, String.format("Missing '%s' configuration value", GeoIpPrepperConfig.DATABASE_PATH));
@@ -39,13 +40,13 @@ public class MaxMindGeoIpProvider implements GeoIpProvider {
             for (String desiredField : desiredFields) {
                 try {
                     GeoDataField field = GeoDataField.valueOf(desiredField.toUpperCase(Locale.ROOT));
-                    fieldsToAdd.add(field);
+                    this.desiredFields.add(field);
                 } catch (Exception e) {
                     LOG.error("Invalid field in config settings, {}", desiredField);
                 }
             }
         } else {
-            fieldsToAdd = new ArrayList<>(Arrays.asList(GeoDataField.values()));
+            this.desiredFields.addAll(Arrays.asList(GeoDataField.values()));
         }
         try {
             databaseReader = new DatabaseReader.Builder(database).withCache(new CHMCache()).build();
@@ -68,7 +69,7 @@ public class MaxMindGeoIpProvider implements GeoIpProvider {
             final Continent continent = response.getContinent();
             final Postal postal = response.getPostal();
             final LocationData.Builder builder = new LocationData.Builder();
-            for (GeoDataField desiredField : fieldsToAdd) {
+            for (GeoDataField desiredField : desiredFields) {
                 switch (desiredField) {
                     case IP:
                         builder.withIp(ipAddress.getHostAddress());
@@ -77,7 +78,7 @@ public class MaxMindGeoIpProvider implements GeoIpProvider {
                         builder.withCityName(city.getName());
                         break;
                     case REGION_NAME:
-                        builder.withRegion(subdivision.getName());
+                        builder.withRegionName(subdivision.getName());
                         break;
                     case COUNTRY_NAME:
                         builder.withCountry(country.getName());
@@ -92,7 +93,7 @@ public class MaxMindGeoIpProvider implements GeoIpProvider {
                         builder.withRegionCode(subdivision.getIsoCode());
                         break;
                     case POSTAL_CODE:
-                        builder.withPostal(postal.getCode());
+                        builder.withPostalCode(postal.getCode());
                         break;
                     case TIMEZONE:
                         builder.withTimeZone(location.getTimeZone());

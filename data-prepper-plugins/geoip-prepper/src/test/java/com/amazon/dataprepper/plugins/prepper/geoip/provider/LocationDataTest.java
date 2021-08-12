@@ -9,15 +9,15 @@ public class LocationDataTest {
 
     @BeforeEach
     public void setup() {
-        expectedLocation = new LocationData.Builder().withCountry("a").withRegion("b").withCityName("c").build();
+        expectedLocation = new LocationData.Builder().withCountry("a").withRegionName("b").withCityName("c").build();
 
 
     }
 
     @Test
     public void testEquals() {
-        LocationData equalLocation = new LocationData.Builder().withCountry("a").withRegion("b").withCityName("c").build();
-        LocationData unequalLocation = new LocationData.Builder().withCountry("d").withRegion("e").withCityName("f").build();
+        LocationData equalLocation = new LocationData.Builder().withCountry("a").withRegionName("b").withCityName("c").build();
+        LocationData unequalLocation = new LocationData.Builder().withCountry("d").withRegionName("e").withCityName("f").build();
 
         Assertions.assertEquals(expectedLocation, expectedLocation);
         Assertions.assertNotEquals(expectedLocation, null);

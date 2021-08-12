@@ -12,7 +12,7 @@ public class LocationData {
     private final String CONTINENT_FIELD = "geo.continent_code";
     private final String COUNTRY_ISO_FIELD = "geo.country_iso_code";
     private final String POSTAL_CODE_FIELD = "geo.postal_code";
-    private final String REGION_FIELD = "geo.region_name";
+    private final String REGION_NAME_FIELD = "geo.region_name";
     private final String REGION_CODE_FIELD = "geo.region_code";
     private final String TIMEZONE_FIELD = "geo.timezone";
     private final String LOCATION_FIELD = "geo.location";
@@ -22,7 +22,7 @@ public class LocationData {
 
     @JsonProperty(COUNTRY_NAME_FIELD)
     private final String countryName;
-    @JsonProperty(REGION_FIELD)
+    @JsonProperty(REGION_NAME_FIELD)
     private final String regionName;
     @JsonProperty(CITY_FIELD)
     private final String cityName;
@@ -146,13 +146,13 @@ public class LocationData {
             return this;
         }
 
-        public Builder withPostal(String postal) {
-            this.postalCode = postal;
+        public Builder withPostalCode(String postalCode) {
+            this.postalCode = postalCode;
             return this;
         }
 
-        public Builder withRegion(String region) {
-            this.regionName = region;
+        public Builder withRegionName(String regionName) {
+            this.regionName = regionName;
             return this;
         }
 
@@ -167,8 +167,9 @@ public class LocationData {
         }
 
         public Builder withLocation(Double[] location) {
-            if (location.length != 2)
+            if (location.length != 2) {
                 throw new IllegalArgumentException("location must be an array of length 2 in form [lat, long]");
+            }
             this.location = location;
             return this;
         }

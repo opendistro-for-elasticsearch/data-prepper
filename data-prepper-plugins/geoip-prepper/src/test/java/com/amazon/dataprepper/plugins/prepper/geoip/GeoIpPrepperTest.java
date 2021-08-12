@@ -47,7 +47,7 @@ public class GeoIpPrepperTest {
 
     private static final String[] TEST_DESIRED_FIELDS = {CITY_NAME_FIELD, COUNTRY_NAME_FIELD, REGION_NAME_FIELD};
     private static final LocationData TEST_LOCATION_DATA = new LocationData.Builder().withCountry("United Kingdom")
-            .withRegion("West Berkshire").withCityName("Boxford").build();
+            .withRegionName("West Berkshire").withCityName("Boxford").build();
     final PluginSetting testPluginSetting = new PluginSetting(
             PLUGIN_NAME,
             new HashMap<String, Object>() {{
