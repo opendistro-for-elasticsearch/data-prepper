@@ -6,6 +6,8 @@ import com.amazon.dataprepper.plugins.prepper.geoip.GeoIpPrepperConfig;
 import java.util.Objects;
 
 public class GeoIpProviderFactory {
+    private static final String[] DEFAULT_DESIRED_FIELDS = new String[]{};
+
     public GeoIpProvider createGeoIpProvider(final PluginSetting pluginSetting) {
         Objects.requireNonNull(pluginSetting);
         final String providerString = pluginSetting.getStringOrDefault(GeoIpPrepperConfig.DATA_SOURCE, null);
@@ -15,8 +17,9 @@ public class GeoIpProviderFactory {
         switch (provider) {
             case MaxMindGeolite2CityDatabase:
                 String dbPath = pluginSetting.getStringOrDefault(GeoIpPrepperConfig.DATABASE_PATH, null);
+                String[] desiredFields = (String[]) pluginSetting.getAttributeOrDefault(GeoIpPrepperConfig.DESIRED_FIELDS, DEFAULT_DESIRED_FIELDS);
                 Objects.requireNonNull(dbPath, "database_path must not be null when provider is MaxMind database");
-                return new MaxMindGeoIpProvider(dbPath);
+                return new MaxMindGeoIpProvider(dbPath, desiredFields);
             default:
                 throw new UnsupportedOperationException(String.format("Unsupported data source: %s", provider));
 

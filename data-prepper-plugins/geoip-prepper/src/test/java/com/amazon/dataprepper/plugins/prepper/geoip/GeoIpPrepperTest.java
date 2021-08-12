@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class GeoIpPrepperTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
     private static final String TEST_PIPELINE_NAME = "testPipelineName";
     private static final String PLUGIN_NAME = "geoip_prepper";
     private static final String PROVIDER_TYPE = "MaxMindGeolite2CityDatabase";
@@ -40,14 +41,20 @@ public class GeoIpPrepperTest {
     private static final String TEST_SPAN_TARGET_FIELD = "resource.attributes.client@ip";
     private static final String TEST_SPAN_BAD_TARGET_FIELD = "doesnt.exist.client@ip";
     private static final String TEST_LOCATION_FIELD_NAME = "locationData";
-    private static final LocationData TEST_LOCATION_DATA = new LocationData("United Kingdom", "West Berkshire", "Boxford");
+    private static final String CITY_NAME_FIELD = "city_name";
+    private static final String COUNTRY_NAME_FIELD = "country_name";
+    private static final String REGION_NAME_FIELD = "region_name";
+
+    private static final String[] TEST_DESIRED_FIELDS = {CITY_NAME_FIELD, COUNTRY_NAME_FIELD, REGION_NAME_FIELD};
+    private static final LocationData TEST_LOCATION_DATA = new LocationData.Builder().withCountry("United Kingdom")
+            .withRegionName("West Berkshire").withCityName("Boxford").build();
     final PluginSetting testPluginSetting = new PluginSetting(
             PLUGIN_NAME,
             new HashMap<String, Object>() {{
                 put(GeoIpPrepperConfig.DATABASE_PATH, TEST_DATABASE_PATH);
                 put(GeoIpPrepperConfig.TARGET_FIELD, TEST_SPAN_TARGET_FIELD);
                 put(GeoIpPrepperConfig.DATA_SOURCE, PROVIDER_TYPE);
-
+                put(GeoIpPrepperConfig.DESIRED_FIELDS, TEST_DESIRED_FIELDS);
             }}
     ) {{
         setPipelineName(TEST_PIPELINE_NAME);
@@ -85,7 +92,10 @@ public class GeoIpPrepperTest {
         Record<String> recordOut = recordsOut.get(0);
         Map<String, Object> rawSpanMap = OBJECT_MAPPER.readValue(recordOut.getData(), new TypeReference<Map<String, Object>>() {
         });
-        Assertions.assertEquals(TEST_LOCATION_DATA.toString(), rawSpanMap.get(TEST_LOCATION_FIELD_NAME));
+        Map<String, Object> testLocationDataMap = OBJECT_MAPPER.convertValue(TEST_LOCATION_DATA, MAP_TYPE_REFERENCE);
+        Assertions.assertEquals(testLocationDataMap.get(CITY_NAME_FIELD), rawSpanMap.get(CITY_NAME_FIELD));
+        Assertions.assertEquals(testLocationDataMap.get(REGION_NAME_FIELD), rawSpanMap.get(REGION_NAME_FIELD));
+        Assertions.assertEquals(testLocationDataMap.get(COUNTRY_NAME_FIELD), rawSpanMap.get(REGION_NAME_FIELD));
     }
 
     @Test

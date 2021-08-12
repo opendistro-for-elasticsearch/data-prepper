@@ -13,12 +13,17 @@ public class MaxMindGeoIpProviderTest {
 
     @BeforeAll
     public static void setup() {
-        maxMindGeoIpProvider = new MaxMindGeoIpProvider(TEST_DATABASE_PATH);
+        maxMindGeoIpProvider = new MaxMindGeoIpProvider(TEST_DATABASE_PATH, null);
     }
 
     @Test
     public void testIpLookup() {
-        LocationData locationData = new LocationData("United Kingdom", "West Berkshire", "Boxford");
+        LocationData.Builder builder = new LocationData.Builder();
+        builder.withCountry("United Kingdom").withRegionName("West Berkshire")
+                .withCityName("Boxford").withLocation(new Double[]{51.75, -1.25}).withLatitude(51.75).withLongitude(-1.25)
+                .withIp("2.125.160.216").withContinent("EU").withCountryCode("GB").withRegionCode("WBK")
+                .withPostalCode("OX1").withTimeZone("Europe/London");
+        LocationData locationData = builder.build();
         Assertions.assertEquals(locationData, maxMindGeoIpProvider.getDataFromIp("2.125.160.216").orElse(null));
     }
 
@@ -34,11 +39,17 @@ public class MaxMindGeoIpProviderTest {
 
     @Test
     public void badDatabase() {
-        Assert.assertThrows(IllegalArgumentException.class, () -> new MaxMindGeoIpProvider(TEST_BAD_DATABASE_PATH));
+        Assert.assertThrows(IllegalArgumentException.class, () -> new MaxMindGeoIpProvider(TEST_BAD_DATABASE_PATH, null));
     }
 
     @Test
     public void wrongDatabase() {
-        Assert.assertThrows(IllegalArgumentException.class, () -> new MaxMindGeoIpProvider(TEST_WRONG_DATABASE_PATH));
+        Assert.assertThrows(IllegalArgumentException.class, () -> new MaxMindGeoIpProvider(TEST_WRONG_DATABASE_PATH, null));
+    }
+
+    @Test
+    public void wrongFields() {
+        MaxMindGeoIpProvider provider = new MaxMindGeoIpProvider(TEST_DATABASE_PATH, new String[]{"bad field"});
+        Assertions.assertFalse(provider.getDataFromIp("43.34.246.154").isPresent());
     }
 }

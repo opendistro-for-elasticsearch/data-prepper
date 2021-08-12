@@ -27,19 +27,16 @@ public class GeoIpPrepper extends AbstractPrepper<Record<String>, Record<String>
     private static final Logger LOG = LoggerFactory.getLogger(GeoIpPrepper.class);
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {
-    };
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, Object>>() {};
     private final String targetField;
     private final GeoIpProvider provider;
     private final IpParser parser;
-    private final String locationField;
 
     public GeoIpPrepper(final PluginSetting pluginSetting) {
         super(pluginSetting);
         Objects.requireNonNull(pluginSetting);
         targetField = (String) pluginSetting.getAttributeFromSettings(GeoIpPrepperConfig.TARGET_FIELD);
         Objects.requireNonNull(targetField);
-        locationField = pluginSetting.getStringOrDefault(GeoIpPrepperConfig.LOCATION_FIELD, GeoIpPrepperConfig.DEFAULT_LOCATION_FIELD);
         provider = new GeoIpProviderFactory().createGeoIpProvider(pluginSetting);
         parser = new IpParser();
     }
@@ -52,7 +49,6 @@ public class GeoIpPrepper extends AbstractPrepper<Record<String>, Record<String>
         parser = new IpParser();
         targetField = (String) pluginSetting.getAttributeFromSettings(GeoIpPrepperConfig.TARGET_FIELD);
         Objects.requireNonNull(targetField);
-        locationField = pluginSetting.getStringOrDefault(GeoIpPrepperConfig.LOCATION_FIELD, GeoIpPrepperConfig.DEFAULT_LOCATION_FIELD);
     }
 
     /**
@@ -73,18 +69,18 @@ public class GeoIpPrepper extends AbstractPrepper<Record<String>, Record<String>
                 final Optional<String> foundIp = parser.getIpFromJson(rawSpanMap, targetField);
                 if (foundIp.isPresent()) {
                     final Optional<LocationData> foundData = provider.getDataFromIp(foundIp.get());
-                    //TODO This is a placeholder, how data is attached is still TBD
                     if (foundData.isPresent()) {
-                        rawSpanMap.put(locationField, foundData.get().toString());
+                        Map<String, Object> locationDataMap = OBJECT_MAPPER.convertValue(foundData.get(), MAP_TYPE_REFERENCE);
+                        for (Map.Entry<String, Object> entry : locationDataMap.entrySet())
+                            rawSpanMap.put(entry.getKey(), entry.getValue());
                         final String newData = OBJECT_MAPPER.writeValueAsString(rawSpanMap);
                         recordsOut.add(new Record<>(newData, record.getMetadata()));
-                        System.out.println(recordsOut);
                     } else {
                         recordsOut.add(record);
                     }
                 } else {
                     recordsOut.add(record);
-                    //TODO Handle no IP returned
+                    //TODO Handle logging for no IP returned
                 }
             } catch (JsonProcessingException e) {
                 LOG.error("Failed to parse the record: [{}]", record.getData());
