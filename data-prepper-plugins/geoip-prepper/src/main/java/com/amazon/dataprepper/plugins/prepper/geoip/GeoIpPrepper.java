@@ -72,7 +72,9 @@ public class GeoIpPrepper extends AbstractPrepper<Record<String>, Record<String>
                     if (foundData.isPresent()) {
                         Map<String, Object> locationDataMap = OBJECT_MAPPER.convertValue(foundData.get(), MAP_TYPE_REFERENCE);
                         for (Map.Entry<String, Object> entry : locationDataMap.entrySet())
-                            rawSpanMap.put(entry.getKey(), entry.getValue());
+                            if (entry.getValue() != null) {
+                                rawSpanMap.put(entry.getKey(), entry.getValue());
+                            }
                         final String newData = OBJECT_MAPPER.writeValueAsString(rawSpanMap);
                         recordsOut.add(new Record<>(newData, record.getMetadata()));
                     } else {

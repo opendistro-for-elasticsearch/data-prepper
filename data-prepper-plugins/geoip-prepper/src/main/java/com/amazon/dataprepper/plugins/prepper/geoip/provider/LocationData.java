@@ -16,8 +16,8 @@ public class LocationData {
     private final String REGION_CODE_FIELD = "geo.region_code";
     private final String TIMEZONE_FIELD = "geo.timezone";
     private final String LOCATION_FIELD = "geo.location";
-    private final String LATITUDE_FIELD = "geo.location.lat";
-    private final String LONGITUDE_FIELD = "geo.location.lon";
+    private final String LATITUDE_FIELD = "geo.latitude";
+    private final String LONGITUDE_FIELD = "geo.longitude";
     private final String ip;
 
     @JsonProperty(COUNTRY_NAME_FIELD)

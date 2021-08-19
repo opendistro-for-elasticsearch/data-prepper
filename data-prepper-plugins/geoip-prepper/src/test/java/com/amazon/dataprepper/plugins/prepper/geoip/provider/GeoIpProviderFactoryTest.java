@@ -5,7 +5,9 @@ import com.amazon.dataprepper.plugins.prepper.geoip.GeoIpPrepperConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class GeoIpProviderFactoryTest {
 
     private static final String TEST_DATABASE_PATH = "./src/test/resources/GeoLite2-City-Test.mmdb";
-    private static final String[] TEST_DESIRED_FIELDS = {"city_name", "country_name", "location"};
+    private static final List<String> TEST_DESIRED_FIELDS = Arrays.asList("city_name", "country_name", "location");
 
     private PluginSetting pluginSetting;
 
