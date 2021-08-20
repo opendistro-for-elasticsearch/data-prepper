@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +46,7 @@ public class GeoIpPrepperTest {
     private static final String COUNTRY_NAME_FIELD = "country_name";
     private static final String REGION_NAME_FIELD = "region_name";
 
-    private static final String[] TEST_DESIRED_FIELDS = {CITY_NAME_FIELD, COUNTRY_NAME_FIELD, REGION_NAME_FIELD};
+    private static final List<String> TEST_DESIRED_FIELDS = Arrays.asList(CITY_NAME_FIELD, COUNTRY_NAME_FIELD, REGION_NAME_FIELD);
     private static final LocationData TEST_LOCATION_DATA = new LocationData.Builder().withCountry("United Kingdom")
             .withRegionName("West Berkshire").withCityName("Boxford").build();
     final PluginSetting testPluginSetting = new PluginSetting(
