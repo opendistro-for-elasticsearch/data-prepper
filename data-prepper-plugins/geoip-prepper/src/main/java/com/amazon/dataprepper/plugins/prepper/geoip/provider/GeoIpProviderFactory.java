@@ -20,7 +20,12 @@ public class GeoIpProviderFactory {
                 String dbPath = pluginSetting.getStringOrDefault(GeoIpPrepperConfig.DATABASE_PATH, null);
                 @SuppressWarnings("unchecked")
                 final List<String> fields = (List<String>) pluginSetting.getAttributeFromSettings(GeoIpPrepperConfig.DESIRED_FIELDS);
-                String[] desiredFields = fields.toArray(new String[0]);
+                String[] desiredFields;
+                if (fields != null) {
+                      desiredFields = fields.toArray(new String[0]);
+                } else {
+                    desiredFields = null;
+                }
                 Objects.requireNonNull(dbPath, "database_path must not be null when provider is MaxMind database");
                 return new MaxMindGeoIpProvider(dbPath, desiredFields);
             default:
