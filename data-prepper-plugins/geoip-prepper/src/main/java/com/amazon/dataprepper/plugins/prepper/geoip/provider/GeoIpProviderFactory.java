@@ -24,7 +24,7 @@ public class GeoIpProviderFactory {
                 if (fields != null) {
                       desiredFields = fields.toArray(new String[0]);
                 } else {
-                    desiredFields = null;
+                    desiredFields = new String[]{};
                 }
                 Objects.requireNonNull(dbPath, "database_path must not be null when provider is MaxMind database");
                 return new MaxMindGeoIpProvider(dbPath, desiredFields);
