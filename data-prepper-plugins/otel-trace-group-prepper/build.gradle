@@ -3,7 +3,7 @@ plugins {
 }
 
 ext {
-    es_version = System.getProperty("es.version", "7.8.0")
+    es_version = System.getProperty("es.version", "7.10.2")
 }
 
 dependencies {
