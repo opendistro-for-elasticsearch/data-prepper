@@ -46,7 +46,16 @@ subprojects {
         testImplementation("junit:junit:4.13") {
             exclude group: 'org.hamcrest' // workaround for jarHell
         }
+        constraints {
+            implementation('org.apache.httpcomponents:httpclient') {
+                version {
+                    require '4.5.13'
+                }
+                because 'We want the newest version of httpclient.'
+            }
+        }
     }
+
     build.dependsOn test
     jacocoTestReport {
         dependsOn test // tests are required to run before generating the report
