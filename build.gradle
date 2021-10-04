@@ -56,6 +56,15 @@ subprojects {
         }
     }
 
+    configurations.all {
+        resolutionStrategy.eachDependency { def details ->
+            if (details.requested.group == 'io.netty' && !details.requested.name.startsWith('netty-tcnative')) {
+                details.useVersion '4.1.61.Final'
+                details.because 'includes CVE fix'
+            }
+        }
+    }
+
     build.dependsOn test
     jacocoTestReport {
         dependsOn test // tests are required to run before generating the report
