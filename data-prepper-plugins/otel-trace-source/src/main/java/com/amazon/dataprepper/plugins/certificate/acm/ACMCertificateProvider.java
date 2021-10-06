@@ -2,6 +2,7 @@ package com.amazon.dataprepper.plugins.certificate.acm;
 
 import com.amazon.dataprepper.plugins.certificate.CertificateProvider;
 import com.amazon.dataprepper.plugins.certificate.model.Certificate;
+import com.amazonaws.arn.Arn;
 import com.amazonaws.services.certificatemanager.AWSCertificateManager;
 import com.amazonaws.services.certificatemanager.model.ExportCertificateRequest;
 import com.amazonaws.services.certificatemanager.model.ExportCertificateResult;
@@ -53,8 +54,8 @@ public class ACMCertificateProvider implements CertificateProvider {
                                   final String passphrase) {
         this.awsCertificateManager = Objects.requireNonNull(awsCertificateManager);
         this.acmArn = Objects.requireNonNull(acmArn);
-        if(!acmArn.startsWith("arn")) {
-            throw new InvalidArnException("Invalid acmArn format");
+        if(!acmArn.equals(Arn.fromString(acmArn).toString())) {
+            throw new InvalidArnException("Invalid ARN format for acmArn");
         }
         this.totalTimeout = Objects.requireNonNull(totalTimeout);
         // Passphrase can be null. If null a random passphrase will be generated.

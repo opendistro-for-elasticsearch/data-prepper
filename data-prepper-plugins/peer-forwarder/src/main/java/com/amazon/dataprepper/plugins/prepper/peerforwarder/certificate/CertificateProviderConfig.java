@@ -1,5 +1,6 @@
 package com.amazon.dataprepper.plugins.prepper.peerforwarder.certificate;
 
+import com.amazonaws.arn.Arn;
 import com.amazonaws.services.certificatemanager.model.InvalidArnException;
 
 public class CertificateProviderConfig {
@@ -14,8 +15,8 @@ public class CertificateProviderConfig {
     public CertificateProviderConfig(final boolean useAcmCertForSSL, final String acmCertificateArn, final String awsRegion, final long acmCertIssueTimeOutMillis, final String sslKeyCertChainFile) {
         this.useAcmCertForSSL = useAcmCertForSSL;
         this.acmCertificateArn = acmCertificateArn;
-        if(acmCertificateArn != null && !acmCertificateArn.startsWith("arn")) {
-            throw new InvalidArnException("Invalid acmCertificateArn format");
+        if(acmCertificateArn != null && !acmCertificateArn.equals(Arn.fromString(acmCertificateArn).toString())) {
+            throw new InvalidArnException("Invalid ARN format for acmCertificateArn");
         }
         this.awsRegion = awsRegion;
         this.acmCertIssueTimeOutMillis = acmCertIssueTimeOutMillis;
