@@ -53,6 +53,9 @@ public class ACMCertificateProvider implements CertificateProvider {
                                   final String passphrase) {
         this.awsCertificateManager = Objects.requireNonNull(awsCertificateManager);
         this.acmArn = Objects.requireNonNull(acmArn);
+        if(!acmArn.startsWith("arn")) {
+            throw new InvalidArnException("Invalid acmArn format");
+        }
         this.totalTimeout = Objects.requireNonNull(totalTimeout);
         // Passphrase can be null. If null a random passphrase will be generated.
         this.passphrase = passphrase;

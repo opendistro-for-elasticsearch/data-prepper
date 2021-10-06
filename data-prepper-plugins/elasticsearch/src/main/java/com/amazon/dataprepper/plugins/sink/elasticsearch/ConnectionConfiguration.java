@@ -338,6 +338,8 @@ public class ConnectionConfiguration {
     }
 
     public Builder withAWSStsRoleArn(final String awsStsRoleArn) {
+      checkArgument(awsStsRoleArn == null || awsStsRoleArn.length() <= 2048, "awsStsRoleArn length cannot exceed 2048");
+      checkArgument(awsStsRoleArn == null || awsStsRoleArn.startsWith("arn"), "Incorrect ARN format for awsStsRoleArn: "+ awsStsRoleArn);
       this.awsStsRoleArn = awsStsRoleArn;
       return this;
     }
