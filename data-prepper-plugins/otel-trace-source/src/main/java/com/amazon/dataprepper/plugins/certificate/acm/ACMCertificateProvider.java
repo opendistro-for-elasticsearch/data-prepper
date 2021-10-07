@@ -54,7 +54,9 @@ public class ACMCertificateProvider implements CertificateProvider {
                                   final String passphrase) {
         this.awsCertificateManager = Objects.requireNonNull(awsCertificateManager);
         this.acmArn = Objects.requireNonNull(acmArn);
-        if(!acmArn.equals(Arn.fromString(acmArn).toString())) {
+        try {
+            Arn.fromString(acmArn);
+        } catch (Exception e) {
             throw new InvalidArnException("Invalid ARN format for acmArn");
         }
         this.totalTimeout = Objects.requireNonNull(totalTimeout);

@@ -15,8 +15,12 @@ public class CertificateProviderConfig {
     public CertificateProviderConfig(final boolean useAcmCertForSSL, final String acmCertificateArn, final String awsRegion, final long acmCertIssueTimeOutMillis, final String sslKeyCertChainFile) {
         this.useAcmCertForSSL = useAcmCertForSSL;
         this.acmCertificateArn = acmCertificateArn;
-        if(acmCertificateArn != null && !acmCertificateArn.equals(Arn.fromString(acmCertificateArn).toString())) {
-            throw new InvalidArnException("Invalid ARN format for acmCertificateArn");
+        if(acmCertificateArn != null) {
+            try {
+                Arn.fromString(acmCertificateArn);
+            } catch(Exception e) {
+                throw new InvalidArnException("Invalid ARN format for acmCertificateArn");
+            }
         }
         this.awsRegion = awsRegion;
         this.acmCertIssueTimeOutMillis = acmCertIssueTimeOutMillis;
