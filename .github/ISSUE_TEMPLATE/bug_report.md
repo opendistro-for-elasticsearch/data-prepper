@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: This project is no longer making changes. Please migrate to https://github.com/opensearch-project/data-prepper
 title: ''
 labels: bug
 assignees: ''
