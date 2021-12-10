@@ -3,6 +3,10 @@ ARG CONFIG_FILEPATH
 ARG JAR_FILE
 ENV ENV_CONFIG_FILEPATH=$CONFIG_FILEPATH
 ENV DATA_PREPPER_PATH /usr/share/data-prepper
+
+# Update all packages
+RUN yum update -y && yum clean all
+
 RUN mkdir -p $DATA_PREPPER_PATH
 COPY $JAR_FILE /usr/share/data-prepper/data-prepper.jar
 WORKDIR $DATA_PREPPER_PATH
