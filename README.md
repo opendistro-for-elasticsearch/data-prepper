@@ -3,23 +3,22 @@
 
 This project has moved to [OpenSearch Data Prepper](https://github.com/opensearch-project/data-prepper).
 
-This current repository is the inactive ODFE Data Prepper.
+You are currently viewing the inactive and archived OpenDistro Data Prepper.
 All work is now happening in the [OpenSearch Data Prepper](https://github.com/opensearch-project/data-prepper)
-project. The OpenSearch Data Prepper supports OpenSearch, ODFE, and ElasticSearch 7.x.
+project. The OpenSearch Data Prepper can send events to OpenSearch, OpenDistro, and ElasticSearch 7.x.
 The OpenSearch Data Prepper already has new features and improvements, with many
 more planned.
 
-The last version of ODFE Data Prepper is version 1.0 which was
-released May 2021. New versions will only be supplied for critical
-security issues through Dec 2021. After that point, no more changes will
-be made to this repository.
+The last version of OpenDistro Data Prepper was version 1.0.3 which was
+released December 2021 with log4j security patches.
 
-To help you migrate, we have a short migration guide below.
+To help you migrate to [OpenSearch Data Prepper](https://github.com/opensearch-project/data-prepper),
+we have a short migration guide below.
 
 ## Migrating to OpenSearch Data Prepper
 
 This section provides instructions for migrating from
-the ODFE Data Prepper to OpenSearch Data Prepper.
+the OpenDistro Data Prepper to OpenSearch Data Prepper.
 
 ### Change your Pipeline Configuration
 
@@ -28,11 +27,11 @@ need to change your existing pipeline to use the `opensearch` plugin
 instead of `elasticsearch`.
 
 Please note that while the plugin is titled `opensearch` it remains compatible
-with ODFE and ElasticSearch 7.x.
+with OpenDistro and ElasticSearch 7.x.
 
 ### Update Docker Image
 
-The ODFE Data Prepper Docker image was located at `amazon/opendistro-for-elasticsearch-data-prepper`.
+The OpenDistro Data Prepper Docker image was located at `amazon/opendistro-for-elasticsearch-data-prepper`.
 You will need to change this value to `opensearchproject/opensearch-data-prepper`.
 
 # Old README
